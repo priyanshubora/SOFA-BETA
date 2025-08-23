@@ -1,3 +1,4 @@
+
 'use server';
 
 /**
@@ -8,7 +9,7 @@
  * - GuideNewUsersOutput - The return type for the guideNewUsers function.
  */
 
-import {oai} from '@/ai/openai';
+import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 
 const GuideNewUsersInputSchema = z.object({
@@ -27,7 +28,7 @@ export async function guideNewUsers(input: GuideNewUsersInput): Promise<GuideNew
   return guideNewUsersFlow(input);
 }
 
-const prompt = oai.definePrompt({
+const prompt = ai.definePrompt({
   name: 'guideNewUsersPrompt',
   input: {schema: GuideNewUsersInputSchema},
   output: {schema: GuideNewUsersOutputSchema},
@@ -45,7 +46,7 @@ const prompt = oai.definePrompt({
   `,
 });
 
-const guideNewUsersFlow = oai.defineFlow(
+const guideNewUsersFlow = ai.defineFlow(
   {
     name: 'guideNewusersFlow',
     inputSchema: GuideNewUsersInputSchema,
