@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { ClientOceanBackground } from '@/components/client-ocean-background';
 import { ThemeToggle } from '@/components/theme-toggle';
-import { Anchor, ArrowLeft, Users, Zap, BrainCircuit } from 'lucide-react';
+import { Anchor, ArrowLeft, Users, Zap, BrainCircuit, Code } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 export default function AboutPage() {
@@ -63,7 +63,17 @@ export default function AboutPage() {
                     </div>
                 </div>
 
-                <div className="text-center pt-4">
+                <div className="text-center pt-4 space-y-6">
+                    <div className="p-4 rounded-lg neumorphic-inset">
+                        <div className="flex items-center justify-center gap-2">
+                             <Code className="h-6 w-6 text-accent" />
+                             <h3 className="text-xl font-bold">Created By</h3>
+                        </div>
+                        <p className="text-muted-foreground mt-2">
+                            Rohan Nautiyal, Shubham Rana, Yashvir Singh Negi, and Priyanshu Bora
+                        </p>
+                    </div>
+
                     <Link href="/app">
                     <Button size="lg" className="group neumorphic-outset neumorphic-outset-hover neumorphic-inset-active transition-all duration-200">
                         Analyze a Document Now

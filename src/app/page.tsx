@@ -3,8 +3,7 @@
 
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { ThemeToggle } from '@/components/theme-toggle';
-import { Anchor, ArrowRight, Info, Zap, Scale, LayoutDashboard, UploadCloud, BrainCircuit, BarChart2 } from 'lucide-react';
+import { Anchor, ArrowRight, Info, Zap, Scale, LayoutDashboard, UploadCloud, BrainCircuit, BarChart2, ArrowDown } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 export default function LandingPage() {
@@ -41,7 +40,6 @@ export default function LandingPage() {
                   <Info className="mr-2 h-4 w-4" /> About
                 </Button>
               </Link>
-              <ThemeToggle />
             </div>
           </header>
 
@@ -68,6 +66,10 @@ export default function LandingPage() {
               </div>
             </div>
           </div>
+            <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 animate-bounce">
+                <span className="text-sm text-white/70">Learn More</span>
+                <ArrowDown className="h-5 w-5 text-white/70" />
+            </div>
         </main>
       </div>
 
@@ -162,5 +164,3 @@ export default function LandingPage() {
     </div>
   );
 }
-
-    
