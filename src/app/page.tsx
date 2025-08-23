@@ -23,8 +23,7 @@ export default function LandingPage() {
           <div className="absolute inset-0 bg-black/30"></div>
         </div>
 
-        <main className="relative z-10 flex flex-col min-h-screen justify-between p-4 md:p-6">
-          <header className="w-full flex items-center justify-between">
+        <header className="relative z-20 w-full flex items-center justify-between p-4 md:p-6">
             <div className="flex items-center gap-3">
               <div className="bg-white/20 backdrop-blur-sm p-3 rounded-full border border-white/30">
                 <Anchor className="h-6 w-6 text-white" />
@@ -41,9 +40,10 @@ export default function LandingPage() {
                 </Button>
               </Link>
             </div>
-          </header>
+        </header>
 
-          <div className="flex-1 flex flex-col items-center justify-center text-center px-4 -mt-20">
+        <main className="relative z-10 flex flex-col min-h-[calc(100vh_-_80px)] justify-center items-center -mt-16">
+          <div className="flex-1 flex flex-col items-center justify-center text-center px-4">
             <div className="max-w-4xl space-y-6 animate-in fade-in-50 slide-in-from-bottom-10 duration-700">
               <h1 className="text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-tight">
                 Maritime Intelligence, <span className="text-primary">Redefined</span>.
