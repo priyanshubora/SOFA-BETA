@@ -51,10 +51,10 @@ interface LaytimeCalculatorProps {
 }
 
 const CURRENCIES = {
-  USD: { symbol: "$", rate: 1 },
-  INR: { symbol: "₹", rate: 83.5 },
-  EUR: { symbol: "€", rate: 0.92 },
-  GBP: { symbol: "£", rate: 0.79 },
+  USD: { symbol: "$" },
+  INR: { symbol: "₹" },
+  EUR: { symbol: "€" },
+  GBP: { symbol: "£" },
 };
 type Currency = keyof typeof CURRENCIES;
 
@@ -122,14 +122,12 @@ export function LaytimeCalculator({ laytimeResult }: LaytimeCalculatorProps) {
   }, [allowedLaytimeDays, demurrageRate, initialTotalLaytimeHours]);
 
   const displayedDemurrageCost = useMemo(() => {
-     const selectedCurrency = CURRENCIES[currency];
-     const convertedCost = calculation.demurrageCost * selectedCurrency.rate;
      return new Intl.NumberFormat('en-US', {
         style: 'currency',
         currency: currency,
         minimumFractionDigits: 0,
         maximumFractionDigits: 0,
-     }).format(convertedCost);
+     }).format(calculation.demurrageCost);
   }, [calculation.demurrageCost, currency]);
   
   if (!laytimeResult) {
@@ -181,14 +179,26 @@ export function LaytimeCalculator({ laytimeResult }: LaytimeCalculatorProps) {
                     />
                 </div>
                  <div className="space-y-2">
-                    <Label htmlFor="demurrage-rate">Demurrage Rate (per day, in USD)</Label>
-                    <Input 
-                        id="demurrage-rate"
-                        type="number"
-                        value={demurrageRate}
-                        onChange={(e) => setDemurrageRate(parseInt(e.target.value, 10) || 0)}
-                        className="font-semibold"
-                    />
+                    <Label htmlFor="demurrage-rate">Demurrage Rate (per day)</Label>
+                    <div className="flex gap-2">
+                        <Input 
+                            id="demurrage-rate"
+                            type="number"
+                            value={demurrageRate}
+                            onChange={(e) => setDemurrageRate(parseInt(e.target.value, 10) || 0)}
+                            className="font-semibold"
+                        />
+                        <Select value={currency} onValueChange={(value) => setCurrency(value as Currency)}>
+                            <SelectTrigger id="currency" className="w-32">
+                                <SelectValue placeholder="Currency" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {Object.keys(CURRENCIES).map(key => (
+                                     <SelectItem key={key} value={key}>{key}</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
                 </div>
             </CardContent>
         </Card>
@@ -245,24 +255,9 @@ export function LaytimeCalculator({ laytimeResult }: LaytimeCalculatorProps) {
                          <CircleDollarSign className="h-4 w-4 text-red-600 dark:text-red-500" />
                      </CardTitle>
                 </CardHeader>
-                <CardContent className="flex items-end gap-4">
-                     <div className="flex-1">
-                        <div className="text-3xl font-bold text-red-700 dark:text-red-400">{displayedDemurrageCost}</div>
-                        <p className="text-xs text-red-600 dark:text-red-500">Based on a rate of ${demurrageRate.toLocaleString()}/day.</p>
-                    </div>
-                    <div className="w-40">
-                         <Label htmlFor="currency" className="text-xs text-muted-foreground">Convert Currency</Label>
-                         <Select value={currency} onValueChange={(value) => setCurrency(value as Currency)}>
-                            <SelectTrigger id="currency" className="bg-background/50 dark:bg-background/20">
-                                <SelectValue placeholder="Select currency" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {Object.keys(CURRENCIES).map(key => (
-                                     <SelectItem key={key} value={key}>{key} ({CURRENCIES[key as Currency].symbol})</SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                    </div>
+                <CardContent>
+                    <div className="text-3xl font-bold text-red-700 dark:text-red-400">{displayedDemurrageCost}</div>
+                    <p className="text-xs text-red-600 dark:text-red-500">Based on a rate of {demurrageRate.toLocaleString()} {currency}/day.</p>
                 </CardContent>
             </Card>
         )}
