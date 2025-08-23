@@ -37,7 +37,7 @@ export default function AppPage() {
             </div>
             <div className="flex flex-col">
               <h1 className="text-2xl font-bold text-foreground/80 md:text-3xl">SOFA</h1>
-              <p className="text-xs text-muted-foreground hidden md:block">Smart Laytime Event Extractor</p>
+              <p className="text-xs text-muted-foreground md:block">Smart Laytime Event Extractor</p>
             </div>
           </div>
            <div className="flex items-center gap-4">
@@ -52,7 +52,7 @@ export default function AppPage() {
 
         <div className="w-full max-w-7xl grid grid-cols-1 gap-8 flex-1">
             {!extractedData ? (
-                <div className="max-w-xl mx-auto w-full p-4 md:p-6 rounded-lg neumorphic-outset">
+                <div className="max-w-3xl mx-auto w-full p-4 md:p-6 rounded-lg neumorphic-outset">
                     <SoFProcessor 
                         onDataExtracted={handleDataExtracted} 
                     />
