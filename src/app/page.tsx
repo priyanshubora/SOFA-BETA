@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from 'next/link';
@@ -45,7 +46,7 @@ export default function LandingPage() {
 
         <div className="flex-1 flex flex-col items-center justify-center text-center px-4">
           <div className="max-w-4xl space-y-6 animate-in fade-in-50 slide-in-from-bottom-10 duration-700">
-            <h1 className="text-5xl md:text-7xl lg:text-8xl font-extrabold tracking-tight">
+            <h1 className="text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-tight">
               Maritime Intelligence, <span className="text-primary">Redefined</span>.
             </h1>
             <p className="text-lg md:text-xl text-white/80 max-w-2xl mx-auto">
