@@ -28,6 +28,7 @@ import {
   Clock,
   Save,
   Hourglass,
+  CircleDollarSign,
 } from "lucide-react";
 import { Badge } from "./ui/badge";
 import {
@@ -55,6 +56,8 @@ export function LaytimeCalculator({ laytimeResult }: LaytimeCalculatorProps) {
       </Alert>
     );
   }
+
+  const hasDemurrage = laytimeResult.demurrage && laytimeResult.demurrage !== "0" && laytimeResult.demurrage !== "N/A" && !laytimeResult.demurrage.startsWith("0h");
 
   return (
     <TooltipProvider>
@@ -112,6 +115,19 @@ export function LaytimeCalculator({ laytimeResult }: LaytimeCalculatorProps) {
                 </CardContent>
             </Card>
         </div>
+        
+        {hasDemurrage && laytimeResult.demurrageCost && (
+             <Card className="neumorphic-outset rounded-lg bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800/30">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium text-red-700 dark:text-red-400">Estimated Demurrage Cost</CardTitle>
+                    <CircleDollarSign className="h-4 w-4 text-red-600 dark:text-red-500" />
+                </CardHeader>
+                <CardContent>
+                    <div className="text-2xl font-bold text-red-700 dark:text-red-400">{laytimeResult.demurrageCost}</div>
+                    <p className="text-xs text-red-600 dark:text-red-500">Based on a standard rate of $20,000/day.</p>
+                </CardContent>
+            </Card>
+        )}
 
         <Card className="neumorphic-outset rounded-lg">
           <CardHeader>

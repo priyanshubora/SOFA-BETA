@@ -21,6 +21,7 @@ const LaytimeCalculationSchema = z.object({
   allowedLaytime: z.string().describe('The standard allowed laytime based on contract (default or specified).'),
   timeSaved: z.string().describe('Time saved if operations finished before allowed laytime expired.'),
   demurrage: z.string().describe('Extra time taken beyond the allowed laytime.'),
+  demurrageCost: z.string().optional().describe('The calculated cost of demurrage based on the extra time taken and a standard daily rate (e.g., "$20,000").'),
   laytimeEvents: z.array(z.object({
     event: z.string(),
     duration: z.string(),
@@ -31,7 +32,7 @@ const LaytimeCalculationSchema = z.object({
 export type LaytimeCalculation = z.infer<typeof LaytimeCalculationSchema>;
 
 const ExtractPortOperationEventsOutputSchema = z.object({
-  vesselName: z.string().describe("The name of the vessel (or ship) mentioned in the SoF."),
+  vesselName: z.string().describe("The name of the vessel (or ship) mentioned in the SoF. Look for 'Vessel Name' or 'Ship Name'."),
   portOfCall: z.string().optional().describe("The port where the operations are taking place."),
   berth: z.string().optional().describe("The specific berth or anchorage location."),
   cargoDescription: z.string().optional().describe("Description of the cargo being loaded or discharged."),
@@ -65,7 +66,7 @@ const extractPortOperationEventsPrompt = ai.definePrompt({
   prompt: `You are an expert maritime logistics AI. Analyze the provided Statement of Fact (SoF) and perform the following three tasks in a single response:
 
 1.  **Extract All Details**: Identify every possible piece of information. This includes, but is not limited to:
-    - Vessel/Ship Name
+    - Vessel/Ship Name (look for "vessel name" or "ship name")
     - Port of Call
     - Berth/Anchorage location
     - Voyage Number
@@ -73,7 +74,7 @@ const extractPortOperationEventsPrompt = ai.definePrompt({
     - Date/Time Notice of Readiness (NOR) was tendered
     - All significant port operation events. For each event, extract the event title, category, start and end times (YYYY-MM-DD HH:MM), duration, status, and any remarks.
 
-2.  **Calculate Laytime**: Perform a laytime calculation. Assume a standard allowed laytime of "3 days". Calculate the total laytime used, time saved (despatch), and extra time (demurrage). Detail which events count towards laytime and why.
+2.  **Calculate Laytime**: Perform a laytime calculation. Assume a standard allowed laytime of "3 days". Calculate the total laytime used, time saved (despatch), and extra time (demurrage). Detail which events count towards laytime and why. If demurrage occurs, calculate the cost. Assume a standard demurrage rate of $20,000 per day, prorated for the demurrage duration. Format the result as a currency string (e.g., '$15,500').
 
 3.  **Summarize Insights**: Provide a brief, bullet-point summary highlighting total port time, cargo operation duration, and major delays.
 
