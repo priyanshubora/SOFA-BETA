@@ -1,11 +1,9 @@
-
 "use client";
 
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { Anchor, ArrowRight, Info } from 'lucide-react';
-import Image from 'next/image';
 
 export default function LandingPage() {
   return (
