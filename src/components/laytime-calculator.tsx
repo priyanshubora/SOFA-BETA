@@ -51,10 +51,10 @@ interface LaytimeCalculatorProps {
 }
 
 const CURRENCIES = {
-  USD: { symbol: "$" },
-  INR: { symbol: "₹" },
-  EUR: { symbol: "€" },
-  GBP: { symbol: "£" },
+  USD: { symbol: "$", rate: 1 },
+  INR: { symbol: "₹", rate: 83.5 },
+  EUR: { symbol: "€", rate: 0.92 },
+  GBP: { symbol: "£", rate: 0.79 },
 };
 type Currency = keyof typeof CURRENCIES;
 
@@ -92,8 +92,9 @@ const formatHoursToDuration = (totalHours: number): string => {
 export function LaytimeCalculator({ laytimeResult }: LaytimeCalculatorProps) {
   const [allowedLaytimeDays, setAllowedLaytimeDays] = useState(3);
   const [demurrageRate, setDemurrageRate] = useState(20000);
-  const [currency, setCurrency] = useState<Currency>("USD");
-  
+  const [rateCurrency, setRateCurrency] = useState<Currency>("USD");
+  const [displayCurrency, setDisplayCurrency] = useState<Currency>("USD");
+
   const initialTotalLaytimeHours = useMemo(() => {
     return parseDurationToHours(laytimeResult?.totalLaytime || "");
   }, [laytimeResult?.totalLaytime]);
@@ -112,23 +113,23 @@ export function LaytimeCalculator({ laytimeResult }: LaytimeCalculatorProps) {
     const timeSaved = difference > 0 ? difference : 0;
     const demurrage = difference < 0 ? Math.abs(difference) : 0;
     
-    const demurrageCost = (demurrage / 24) * demurrageRate;
+    const demurrageCostInUsd = (demurrage / 24) * (demurrageRate / CURRENCIES[rateCurrency].rate);
 
     return {
         timeSaved: formatHoursToDuration(timeSaved),
         demurrage: formatHoursToDuration(demurrage),
-        demurrageCost: demurrageCost,
+        demurrageCost: demurrageCostInUsd * CURRENCIES[displayCurrency].rate,
     }
-  }, [allowedLaytimeDays, demurrageRate, initialTotalLaytimeHours]);
+  }, [allowedLaytimeDays, demurrageRate, initialTotalLaytimeHours, rateCurrency, displayCurrency]);
 
   const displayedDemurrageCost = useMemo(() => {
      return new Intl.NumberFormat('en-US', {
         style: 'currency',
-        currency: currency,
+        currency: displayCurrency,
         minimumFractionDigits: 0,
         maximumFractionDigits: 0,
      }).format(calculation.demurrageCost);
-  }, [calculation.demurrageCost, currency]);
+  }, [calculation.demurrageCost, displayCurrency]);
   
   if (!laytimeResult) {
     return (
@@ -188,7 +189,7 @@ export function LaytimeCalculator({ laytimeResult }: LaytimeCalculatorProps) {
                             onChange={(e) => setDemurrageRate(parseInt(e.target.value, 10) || 0)}
                             className="font-semibold"
                         />
-                        <Select value={currency} onValueChange={(value) => setCurrency(value as Currency)}>
+                        <Select value={rateCurrency} onValueChange={(value) => setRateCurrency(value as Currency)}>
                             <SelectTrigger id="currency" className="w-32">
                                 <SelectValue placeholder="Currency" />
                             </SelectTrigger>
@@ -256,8 +257,23 @@ export function LaytimeCalculator({ laytimeResult }: LaytimeCalculatorProps) {
                      </CardTitle>
                 </CardHeader>
                 <CardContent>
-                    <div className="text-3xl font-bold text-red-700 dark:text-red-400">{displayedDemurrageCost}</div>
-                    <p className="text-xs text-red-600 dark:text-red-500">Based on a rate of {demurrageRate.toLocaleString()} {currency}/day.</p>
+                    <div className="flex items-end gap-4">
+                        <div className="text-3xl font-bold text-red-700 dark:text-red-400">{displayedDemurrageCost}</div>
+                        <div className="flex items-center gap-2 pb-1">
+                            <Label htmlFor="display-currency" className="text-xs text-red-600 dark:text-red-500">View in:</Label>
+                            <Select value={displayCurrency} onValueChange={(value) => setDisplayCurrency(value as Currency)}>
+                                <SelectTrigger id="display-currency" className="w-24 h-8 text-xs">
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {Object.keys(CURRENCIES).map(key => (
+                                        <SelectItem key={key} value={key} className="text-xs">{key}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    </div>
+                    <p className="text-xs text-red-600 dark:text-red-500 mt-1">Based on a rate of {demurrageRate.toLocaleString()} {rateCurrency}/day.</p>
                 </CardContent>
             </Card>
         )}
