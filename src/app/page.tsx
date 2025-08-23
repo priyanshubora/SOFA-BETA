@@ -23,7 +23,7 @@ export default function LandingPage() {
           <div className="absolute inset-0 bg-black/30"></div>
         </div>
 
-        <main className="relative z-10 flex flex-col min-h-screen">
+        <main className="relative z-10 flex flex-col min-h-screen justify-between">
           <header className="w-full flex items-center justify-between p-4 md:p-6">
             <div className="flex items-center gap-3">
               <div className="bg-white/20 backdrop-blur-sm p-3 rounded-full border border-white/30">
@@ -43,7 +43,7 @@ export default function LandingPage() {
             </div>
           </header>
 
-          <div className="flex-1 flex flex-col items-center justify-center text-center px-4">
+          <div className="flex-1 flex flex-col items-center justify-center text-center px-4 -mt-20">
             <div className="max-w-4xl space-y-6 animate-in fade-in-50 slide-in-from-bottom-10 duration-700">
               <h1 className="text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-tight">
                 Maritime Intelligence, <span className="text-primary">Redefined</span>.
@@ -66,7 +66,7 @@ export default function LandingPage() {
               </div>
             </div>
           </div>
-            <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 animate-bounce">
+            <div className="flex flex-col items-center gap-2 animate-bounce pb-10">
                 <span className="text-sm text-white/70">Learn More</span>
                 <ArrowDown className="h-5 w-5 text-white/70" />
             </div>
