@@ -10,9 +10,6 @@ export function OceanBackground({ className }: { className?: string }) {
             <div className="wave"></div>
             <div className="wave"></div>
         </div>
-        <div className="absolute inset-0 flex items-center justify-center">
-             <Ship className="w-48 h-48 text-primary/10 animate-ship-bob relative -bottom-16" />
-        </div>
     </div>
   );
 }
