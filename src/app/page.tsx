@@ -12,13 +12,13 @@ export default function LandingPage() {
     <div className="relative min-h-screen w-full text-white">
       <div className="absolute inset-0 z-0">
         <Image 
-          src="https://images.unsplash.com/photo-1542281286-9e0a16bb7366?q=80&w=1920&auto=format&fit=crop"
+          src="https://images.unsplash.com/photo-1507525428034-b723a9ce6890?q=80&w=1920&auto=format&fit=crop"
           alt="Ocean background"
           layout="fill"
           objectFit="cover"
           quality={100}
           className="brightness-75"
-          data-ai-hint="ocean waves"
+          data-ai-hint="ocean waves beach"
         />
         <div className="absolute inset-0 bg-black/30"></div>
       </div>
