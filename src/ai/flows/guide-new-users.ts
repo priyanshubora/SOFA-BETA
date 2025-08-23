@@ -4,11 +4,11 @@
  * @fileOverview AI assistant to guide new users on how to use the platform.
  *
  * - guideNewUsers - A function that provides guidance to new users.
- * - GuideNewUsersInput - The input type for the guideNewUsers function.
+ * - GuideNewUsersInput - The input type for the guideNewusers function.
  * - GuideNewUsersOutput - The return type for the guideNewUsers function.
  */
 
-import {ai} from '@/ai/genkit';
+import {oai} from '@/ai/openai';
 import {z} from 'genkit';
 
 const GuideNewUsersInputSchema = z.object({
@@ -27,7 +27,7 @@ export async function guideNewUsers(input: GuideNewUsersInput): Promise<GuideNew
   return guideNewUsersFlow(input);
 }
 
-const prompt = ai.definePrompt({
+const prompt = oai.definePrompt({
   name: 'guideNewUsersPrompt',
   input: {schema: GuideNewUsersInputSchema},
   output: {schema: GuideNewUsersOutputSchema},
@@ -45,9 +45,9 @@ const prompt = ai.definePrompt({
   `,
 });
 
-const guideNewUsersFlow = ai.defineFlow(
+const guideNewUsersFlow = oai.defineFlow(
   {
-    name: 'guideNewUsersFlow',
+    name: 'guideNewusersFlow',
     inputSchema: GuideNewUsersInputSchema,
     outputSchema: GuideNewUsersOutputSchema,
   },
