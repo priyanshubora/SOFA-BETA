@@ -1,97 +1,58 @@
 
 "use client";
 
-import { useState } from 'react';
-import { SoFProcessor } from '@/components/sof-processor';
-import { FloatingAiAssistant } from '@/components/floating-ai-assistant';
-import { Anchor, ArrowLeft } from 'lucide-react';
-import { ClientOceanBackground } from '@/components/client-ocean-background';
-import type { ExtractPortOperationEventsOutput } from '@/ai/flows/extract-port-operation-events';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { LaytimeCalculator } from '@/components/laytime-calculator';
-import { ThemeToggle } from '@/components/theme-toggle';
-import { AnalyticsDashboard } from '@/components/analytics-dashboard';
+import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { ExtractedEventsView } from '@/components/extracted-events-view';
-import { Card } from '@/components/ui/card';
-import { cn } from '@/lib/utils';
+import { ClientOceanBackground } from '@/components/client-ocean-background';
+import { ThemeToggle } from '@/components/theme-toggle';
+import { Anchor, ArrowRight, Info } from 'lucide-react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
-export default function Home() {
-  const [extractedData, setExtractedData] = useState<ExtractPortOperationEventsOutput | null>(null);
-
-  const handleDataExtracted = (data: ExtractPortOperationEventsOutput) => {
-    setExtractedData(data);
-  }
-  
-  const handleReset = () => {
-    setExtractedData(null);
-  }
-
+export default function LandingPage() {
   return (
-    <div className="relative min-h-screen w-full">
+    <div className="relative min-h-screen w-full overflow-hidden">
       <ClientOceanBackground />
-      <main className="relative z-10 flex flex-col items-center p-4 md:p-8">
-        <header className="w-full max-w-7xl flex items-center justify-between p-4 mb-4 md:mb-8">
+      <main className="relative z-10 flex flex-col items-center justify-center min-h-screen p-4 md:p-8">
+        <header className="w-full max-w-5xl flex items-center justify-between absolute top-0 left-1/2 -translate-x-1/2 p-4">
           <div className="flex items-center gap-3">
-            <div className="bg-background p-3 rounded-full neumorphic-outset">
+             <div className="bg-background/80 backdrop-blur-sm p-3 rounded-full neumorphic-outset">
               <Anchor className="h-6 w-6 text-primary" />
             </div>
-            <h1 className="text-2xl font-bold text-foreground/80 md:text-3xl">SOFA</h1>
+            <h1 className="text-2xl font-bold text-foreground/80 hidden md:block">SOFA</h1>
           </div>
-           <div className="flex items-center gap-4">
-              <ThemeToggle />
+           <div className="flex items-center gap-2">
+                <Link href="/about">
+                    <Button variant="outline" className="neumorphic-outset neumorphic-outset-hover neumorphic-inset-active transition-all duration-200">
+                        <Info className="mr-2 h-4 w-4" /> About
+                    </Button>
+                </Link>
+                <ThemeToggle />
           </div>
         </header>
 
-        <div className="w-full max-w-7xl grid grid-cols-1 gap-8 flex-1">
-            {!extractedData ? (
-                <div className="max-w-xl mx-auto w-full p-4 md:p-6 rounded-lg neumorphic-outset">
-                    <SoFProcessor 
-                        onDataExtracted={handleDataExtracted} 
-                    />
-                </div>
-            ) : (
-                <div className="space-y-6">
-                     <div className="flex items-center justify-between">
-                        <div className='space-y-1'>
-                            <h2 className="text-2xl font-bold tracking-tight">Vessel: {extractedData.vesselName}</h2>
-                            <p className="text-muted-foreground">
-                                Analysis dashboard for the processed Statement of Fact.
-                            </p>
-                        </div>
-                        <Button variant="outline" onClick={handleReset} className="neumorphic-outset neumorphic-outset-hover neumorphic-inset-active transition-all duration-200">
-                            <ArrowLeft className="mr-2 h-4 w-4" />
-                            Process New SoF
-                        </Button>
-                    </div>
+        <Card className="max-w-2xl text-center bg-background/50 backdrop-blur-sm neumorphic-outset animate-in fade-in-50 slide-in-from-bottom-10 duration-700">
+          <CardHeader>
+            <CardTitle className="text-4xl md:text-5xl font-extrabold tracking-tight text-primary">
+              Welcome to SOFA
+            </CardTitle>
+            <CardDescription className="text-lg md:text-xl text-muted-foreground mt-4">
+              Your AI-Powered Solution for Maritime Laytime Intelligence & Analytics.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <p className="mb-8 text-foreground/80">
+              Automatically extract port operation events from Statements of Fact, calculate laytime, and gain actionable insights to optimize your maritime logistics.
+            </p>
+            <Link href="/app">
+              <Button size="lg" className="group neumorphic-outset neumorphic-outset-hover neumorphic-inset-active transition-all duration-200">
+                Get Started
+                <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+              </Button>
+            </Link>
+          </CardContent>
+        </Card>
 
-                    <Tabs defaultValue="events" className="w-full">
-                        <TabsList className="grid w-full grid-cols-3 max-w-2xl mx-auto bg-transparent rounded-lg neumorphic-inset p-1">
-                            <TabsTrigger value="events" className="data-[state=active]:neumorphic-outset data-[state=active]:text-primary data-[state=active]:shadow-none rounded-md">Extracted Events</TabsTrigger>
-                            <TabsTrigger value="laytime" className="data-[state=active]:neumorphic-outset data-[state=active]:text-primary data-[state=active]:shadow-none rounded-md">Laytime Analytics</TabsTrigger>
-                            <TabsTrigger value="timeline" className="data-[state=active]:neumorphic-outset data-[state=active]:text-primary data-[state=active]:shadow-none rounded-md">Event Timeline</TabsTrigger>
-                        </TabsList>
-                        <TabsContent value="events" className="mt-6">
-                            <div className="p-4 md:p-6 neumorphic-outset rounded-lg">
-                                <ExtractedEventsView extractedData={extractedData} />
-                            </div>
-                        </TabsContent>
-                        <TabsContent value="laytime" className="mt-6">
-                            <div className="p-4 md:p-6 neumorphic-outset rounded-lg">
-                                <LaytimeCalculator laytimeResult={extractedData.laytimeCalculation} />
-                            </div>
-                        </TabsContent>
-                        <TabsContent value="timeline" className="mt-6">
-                             <div className="p-4 md:p-6 neumorphic-outset rounded-lg">
-                                <AnalyticsDashboard extractedData={extractedData} />
-                            </div>
-                        </TabsContent>
-                    </Tabs>
-                </div>
-            )}
-        </div>
       </main>
-      <FloatingAiAssistant extractedData={extractedData} />
     </div>
   );
 }
