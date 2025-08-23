@@ -12,7 +12,7 @@ export default function LandingPage() {
     <div className="relative min-h-screen w-full text-white">
       <div className="absolute inset-0 z-0">
         <Image 
-          src="https://placehold.co/1920x1080.png"
+          src="https://images.unsplash.com/photo-1542281286-9e0a16bb7366?q=80&w=1920&auto=format&fit=crop"
           alt="Ocean background"
           layout="fill"
           objectFit="cover"
