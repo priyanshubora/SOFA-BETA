@@ -31,7 +31,7 @@ const LaytimeCalculationSchema = z.object({
 export type LaytimeCalculation = z.infer<typeof LaytimeCalculationSchema>;
 
 const ExtractPortOperationEventsOutputSchema = z.object({
-  vesselName: z.string().describe("The name of the vessel mentioned in the SoF."),
+  vesselName: z.string().describe("The name of the vessel (or ship) mentioned in the SoF."),
   events: z.array(
     z.object({
       event: z.string().describe('A concise title for the port operation event (e.g., "Pilot Onboard", "Cargo Discharging").'),
@@ -58,7 +58,7 @@ const extractPortOperationEventsPrompt = ai.definePrompt({
   output: {schema: ExtractPortOperationEventsOutputSchema},
   prompt: `You are an expert maritime logistics AI. Analyze the provided Statement of Fact (SoF) and perform the following three tasks in a single response:
 
-1.  **Extract Events**: Identify the vessel name and all significant port operation events. For each event, extract the event title, category, start and end times (YYYY-MM-DD HH:MM), duration, status, and any remarks.
+1.  **Extract Events**: Identify the vessel name (it may be labeled as 'vessel', 'ship', or another similar term) and all significant port operation events. For each event, extract the event title, category, start and end times (YYYY-MM-DD HH:MM), duration, status, and any remarks.
 2.  **Calculate Laytime**: Perform a laytime calculation. Assume a standard allowed laytime of "3 days". Calculate the total laytime used, time saved (despatch), and extra time (demurrage). Detail which events count towards laytime and why.
 3.  **Summarize Insights**: Provide a brief, bullet-point summary highlighting total port time, cargo operation duration, and major delays.
 
