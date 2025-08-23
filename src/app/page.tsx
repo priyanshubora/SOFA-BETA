@@ -23,8 +23,8 @@ export default function LandingPage() {
           <div className="absolute inset-0 bg-black/30"></div>
         </div>
 
-        <main className="relative z-10 flex flex-col min-h-screen justify-between">
-          <header className="w-full flex items-center justify-between p-4 md:p-6">
+        <main className="relative z-10 flex flex-col min-h-screen justify-between p-4 md:p-6">
+          <header className="w-full flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="bg-white/20 backdrop-blur-sm p-3 rounded-full border border-white/30">
                 <Anchor className="h-6 w-6 text-white" />
@@ -74,14 +74,14 @@ export default function LandingPage() {
       </div>
 
       {/* Key Features Section */}
-      <section id="features" className="py-20 md:py-28 bg-secondary/50">
+      <section id="features" className="py-20 md:py-28 bg-background">
         <div className="container mx-auto px-4 text-center">
             <h2 className="text-3xl md:text-4xl font-bold mb-4">Why Choose SOFA?</h2>
             <p className="text-muted-foreground text-lg max-w-3xl mx-auto mb-12">
                 Our platform transforms tedious port documents into actionable intelligence, saving you time and money.
             </p>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              <Card className="text-left animate-in fade-in-0 slide-in-from-bottom-10 duration-700 delay-150">
+              <Card className="text-left animate-in fade-in-0 slide-in-from-bottom-10 duration-700 delay-150 bg-secondary/20 border-border/20">
                 <CardHeader>
                   <div className="flex items-center gap-4">
                     <div className="bg-primary/10 p-3 rounded-full">
@@ -94,7 +94,7 @@ export default function LandingPage() {
                   <p className="text-muted-foreground">Stop waiting hours. Our AI processes complex Statement of Fact documents in seconds, extracting every critical event with precision.</p>
                 </CardContent>
               </Card>
-              <Card className="text-left animate-in fade-in-0 slide-in-from-bottom-10 duration-700 delay-300">
+              <Card className="text-left animate-in fade-in-0 slide-in-from-bottom-10 duration-700 delay-300 bg-secondary/20 border-border/20">
                 <CardHeader>
                   <div className="flex items-center gap-4">
                     <div className="bg-primary/10 p-3 rounded-full">
@@ -107,7 +107,7 @@ export default function LandingPage() {
                   <p className="text-muted-foreground">Eliminate costly human errors and disputes. Get standardized, verifiable laytime calculations based on your SoF data.</p>
                 </CardContent>
               </Card>
-              <Card className="text-left animate-in fade-in-0 slide-in-from-bottom-10 duration-700 delay-500">
+              <Card className="text-left animate-in fade-in-0 slide-in-from-bottom-10 duration-700 delay-500 bg-secondary/20 border-border/20">
                 <CardHeader>
                   <div className="flex items-center gap-4">
                     <div className="bg-primary/10 p-3 rounded-full">
@@ -125,7 +125,7 @@ export default function LandingPage() {
       </section>
 
       {/* How It Works Section */}
-       <section id="how-it-works" className="py-20 md:py-28">
+       <section id="how-it-works" className="py-20 md:py-28 bg-background">
           <div className="container mx-auto px-4 text-center">
             <h2 className="text-3xl md:text-4xl font-bold mb-4">Get Started in 3 Simple Steps</h2>
             <p className="text-muted-foreground text-lg max-w-3xl mx-auto mb-16">
@@ -160,6 +160,25 @@ export default function LandingPage() {
             </div>
           </div>
        </section>
+
+      {/* Call to Action Section */}
+      <section id="cta" className="py-20 md:py-28 bg-secondary/20">
+        <div className="container mx-auto px-4 text-center">
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">Ready to Unlock Your Data?</h2>
+            <p className="text-muted-foreground text-lg max-w-3xl mx-auto mb-8">
+                Stop guessing and start analyzing. Process your first Statement of Fact for free and see the difference AI can make.
+            </p>
+            <Link href="/app">
+                <Button
+                size="lg"
+                className="group bg-primary text-primary-foreground hover:bg-primary/90 transition-transform duration-200 text-lg px-8 py-6"
+                >
+                Analyze a Document Now
+                <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                </Button>
+            </Link>
+        </div>
+      </section>
 
     </div>
   );
