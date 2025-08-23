@@ -31,11 +31,14 @@ export default function AppPage() {
       <ClientOceanBackground />
       <main className="relative z-10 flex flex-col items-center p-4 md:p-8">
         <header className="w-full max-w-7xl flex items-center justify-between p-4 mb-4 md:mb-8">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-4">
             <div className="bg-background p-3 rounded-full neumorphic-outset">
-              <Anchor className="h-6 w-6 text-primary" />
+              <Anchor className="h-8 w-8 text-primary" />
             </div>
-            <h1 className="text-2xl font-bold text-foreground/80 md:text-3xl">SOFA</h1>
+            <div className="flex flex-col">
+              <h1 className="text-2xl font-bold text-foreground/80 md:text-3xl">SOFA</h1>
+              <p className="text-xs text-muted-foreground hidden md:block">Smart Laytime Event Extractor</p>
+            </div>
           </div>
            <div className="flex items-center gap-4">
               <Link href="/">

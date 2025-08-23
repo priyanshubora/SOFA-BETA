@@ -124,15 +124,28 @@ export function SoFProcessor({ onDataExtracted }: SoFProcessorProps) {
       </CardHeader>
       <CardContent className="p-0 mt-6">
         <form onSubmit={handleSubmit} className="space-y-4">
-            <div {...getRootProps()} className={cn("group relative flex flex-col items-center justify-center w-full h-48 rounded-lg cursor-pointer transition-all duration-200 neumorphic-outset neumorphic-outset-hover neumorphic-inset-active", isDragActive && "neumorphic-inset", isSubmitting && "animate-pulse-neumorphic")}>
+            <div {...getRootProps()} className={cn("group relative flex flex-col items-center justify-center w-full h-64 rounded-lg cursor-pointer transition-all duration-200 border-2 border-dashed border-border hover:border-primary/50 hover:bg-primary/5 neumorphic-outset active:neumorphic-inset", isDragActive && "border-primary bg-primary/10 neumorphic-inset", isSubmitting && "animate-pulse")}>
                 <input {...getInputProps()} />
-                <div className="flex flex-col items-center justify-center pt-5 pb-6 text-center">
-                    <UploadCloud className={cn("w-10 h-10 mb-4 text-muted-foreground transition-colors", isDragActive && "text-primary")} />
+                <div className="flex flex-col items-center justify-center text-center p-6">
+                     <svg
+                        className={cn("w-16 h-16 mb-4 text-muted-foreground transition-colors", isDragActive ? "text-primary" : "group-hover:text-primary/80")}
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        strokeWidth="1"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+                        />
+                      </svg>
                     {isDragActive ? (
-                        <p className="font-semibold text-primary">Drop the file here...</p>
+                        <p className="text-lg font-semibold text-primary">Drop the file here to start processing</p>
                     ) : (
                         <>
-                            <p className="mb-2 text-sm text-muted-foreground"><span className="font-semibold">Click to upload</span> or drag and drop</p>
+                            <p className="mb-2 text-md font-semibold text-foreground"><span className="text-primary">Click to upload</span> or drag and drop</p>
                             <p className="text-xs text-muted-foreground">Supports DOCX, PDF, or TXT files</p>
                         </>
                     )}
