@@ -10,6 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 
 const ClientOceanBackground = dynamic(() => import('@/components/client-ocean-background').then(mod => mod.ClientOceanBackground), {
   ssr: false,
+  loading: () => <div className="absolute inset-0 bg-background -z-10" />
 });
 
 export default function AboutPage() {

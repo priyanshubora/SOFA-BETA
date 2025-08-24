@@ -22,15 +22,15 @@ const FloatingAiAssistant = dynamic(() => import('@/components/floating-ai-assis
 });
 
 const ExtractedEventsView = dynamic(() => import('@/components/extracted-events-view').then(mod => mod.ExtractedEventsView), {
-  loading: () => <Skeleton className="h-64 w-full" />,
+  loading: () => <div className="space-y-4"><Skeleton className="h-32 w-full" /><Skeleton className="h-64 w-full" /></div>,
 });
 
 const LaytimeCalculator = dynamic(() => import('@/components/laytime-calculator').then(mod => mod.LaytimeCalculator), {
-    loading: () => <Skeleton className="h-64 w-full" />,
+    loading: () => <div className="space-y-4"><Skeleton className="h-48 w-full" /><Skeleton className="h-64 w-full" /></div>,
 });
 
 const AnalyticsDashboard = dynamic(() => import('@/components/analytics-dashboard').then(mod => mod.AnalyticsDashboard), {
-    loading: () => <Skeleton className="h-64 w-full" />,
+    loading: () => <Skeleton className="h-[500px] w-full" />,
 });
 
 
