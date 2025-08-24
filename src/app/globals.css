@@ -80,4 +80,15 @@
    .neumorphic-inset-active {
     @apply active:shadow-neumorphic-inset dark:active:shadow-neumorphic-inset-dark;
   }
+  
+  .scroll-animate {
+    opacity: 0;
+    transform: translateY(30px);
+    transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+  }
+  
+  .scroll-animate.is-visible {
+      opacity: 1;
+      transform: translateY(0);
+  }
 }
