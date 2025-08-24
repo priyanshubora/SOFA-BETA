@@ -19,6 +19,7 @@ import {
 import type { ExtractPortOperationEventsOutput } from "@/ai/flows/extract-port-operation-events";
 import { Alert, AlertDescription, AlertTitle } from "./ui/alert";
 import { AlertCircle, BarChart as BarChartIcon } from "lucide-react";
+import type { Payload } from "recharts/types/component/DefaultLegendContent";
 
 interface AnalyticsDashboardProps {
   extractedData: ExtractPortOperationEventsOutput;
@@ -130,12 +131,12 @@ export function AnalyticsDashboard({ extractedData }: AnalyticsDashboardProps) {
                             }}
                         />
                         <Legend content={({ payload }) => {
-                            const uniqueCategories = Array.from(new Set(payload?.map(p => p.payload?.category)));
+                           const uniqueCategories = Array.from(new Set(payload?.map(p => (p.payload as any)?.category)));
                             return (
                                 <div className="flex flex-wrap justify-center gap-4 mt-4">
                                 {uniqueCategories.map((category) => (
                                     <div key={category} className="flex items-center gap-2">
-                                        <div className="w-3 h-3 rounded-full" style={{ backgroundColor: CATEGORY_COLORS[category] || CATEGORY_COLORS['Default'] }} />
+                                        <div className="w-3 h-3 rounded-full" style={{ backgroundColor: CATEGORY_COLORS[category as string] || CATEGORY_COLORS['Default'] }} />
                                         <span className="text-sm text-muted-foreground">{category}</span>
                                     </div>
                                 ))}
