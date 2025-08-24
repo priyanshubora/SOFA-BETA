@@ -2,10 +2,9 @@
 "use client";
 
 import { useState } from 'react';
+import dynamic from 'next/dynamic';
 import { SoFProcessor } from '@/components/sof-processor';
-import { FloatingAiAssistant } from '@/components/floating-ai-assistant';
 import { Anchor, ArrowLeft, Home as HomeIcon } from 'lucide-react';
-import { ClientOceanBackground } from '@/components/client-ocean-background';
 import type { ExtractPortOperationEventsOutput } from '@/ai/flows/extract-port-operation-events';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { LaytimeCalculator } from '@/components/laytime-calculator';
@@ -14,6 +13,17 @@ import { AnalyticsDashboard } from '@/components/analytics-dashboard';
 import { Button } from '@/components/ui/button';
 import { ExtractedEventsView } from '@/components/extracted-events-view';
 import Link from 'next/link';
+import { Skeleton } from '@/components/ui/skeleton';
+
+const ClientOceanBackground = dynamic(() => import('@/components/client-ocean-background').then(mod => mod.ClientOceanBackground), {
+  ssr: false,
+  loading: () => <div className="absolute inset-0 bg-background -z-10" />
+});
+
+const FloatingAiAssistant = dynamic(() => import('@/components/floating-ai-assistant').then(mod => mod.FloatingAiAssistant), {
+  ssr: false,
+});
+
 
 export default function AppPage() {
   const [extractedData, setExtractedData] = useState<ExtractPortOperationEventsOutput | null>(null);

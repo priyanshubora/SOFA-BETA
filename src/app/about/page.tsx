@@ -2,11 +2,15 @@
 "use client";
 
 import Link from 'next/link';
+import dynamic from 'next/dynamic';
 import { Button } from '@/components/ui/button';
-import { ClientOceanBackground } from '@/components/client-ocean-background';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { Anchor, ArrowLeft, Users, Zap, BrainCircuit, Code } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+
+const ClientOceanBackground = dynamic(() => import('@/components/client-ocean-background').then(mod => mod.ClientOceanBackground), {
+  ssr: false,
+});
 
 export default function AboutPage() {
   return (
