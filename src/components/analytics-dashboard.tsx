@@ -154,3 +154,6 @@ export function AnalyticsDashboard({ extractedData }: AnalyticsDashboardProps) {
     </div>
   )
 }
+
+
+export default AnalyticsDashboard;

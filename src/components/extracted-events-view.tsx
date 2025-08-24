@@ -164,3 +164,5 @@ export function ExtractedEventsView({ extractedData }: ExtractedEventsViewProps)
     </div>
   )
 }
+
+export default ExtractedEventsView;

@@ -342,3 +342,5 @@ export function LaytimeCalculator({ laytimeResult }: LaytimeCalculatorProps) {
     </TooltipProvider>
   );
 }
+
+export default LaytimeCalculator;

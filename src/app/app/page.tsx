@@ -7,11 +7,8 @@ import { SoFProcessor } from '@/components/sof-processor';
 import { Anchor, ArrowLeft, Home as HomeIcon } from 'lucide-react';
 import type { ExtractPortOperationEventsOutput } from '@/ai/flows/extract-port-operation-events';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { LaytimeCalculator } from '@/components/laytime-calculator';
 import { ThemeToggle } from '@/components/theme-toggle';
-import { AnalyticsDashboard } from '@/components/analytics-dashboard';
 import { Button } from '@/components/ui/button';
-import { ExtractedEventsView } from '@/components/extracted-events-view';
 import Link from 'next/link';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -22,6 +19,18 @@ const ClientOceanBackground = dynamic(() => import('@/components/client-ocean-ba
 
 const FloatingAiAssistant = dynamic(() => import('@/components/floating-ai-assistant').then(mod => mod.FloatingAiAssistant), {
   ssr: false,
+});
+
+const ExtractedEventsView = dynamic(() => import('@/components/extracted-events-view').then(mod => mod.ExtractedEventsView), {
+  loading: () => <Skeleton className="h-64 w-full" />,
+});
+
+const LaytimeCalculator = dynamic(() => import('@/components/laytime-calculator').then(mod => mod.LaytimeCalculator), {
+    loading: () => <Skeleton className="h-64 w-full" />,
+});
+
+const AnalyticsDashboard = dynamic(() => import('@/components/analytics-dashboard').then(mod => mod.AnalyticsDashboard), {
+    loading: () => <Skeleton className="h-64 w-full" />,
 });
 
 
