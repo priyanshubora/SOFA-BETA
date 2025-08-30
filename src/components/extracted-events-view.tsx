@@ -1,6 +1,7 @@
 
 "use client"
 
+import * as React from "react";
 import type { ExtractPortOperationEventsOutput } from "@/ai/flows/extract-port-operation-events";
 import {
   Card,
