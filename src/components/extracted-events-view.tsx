@@ -18,7 +18,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Download, ListTree, Ship, GanttChartSquare, Anchor, Weight, CalendarClock, ChevronDown, FileJson, FileCsv, CheckCircle } from "lucide-react";
+import { Download, ListTree, Ship, GanttChartSquare, Anchor, Weight, CalendarClock, ChevronDown, FileJson, FileText, CheckCircle } from "lucide-react";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "./ui/accordion";
 import { useMemo } from "react";
 import { Button } from "./ui/button";
@@ -191,7 +191,7 @@ export function ExtractedEventsView({ extractedData }: ExtractedEventsViewProps)
                         Download as JSON
                       </DropdownMenuItem>
                       <DropdownMenuItem onClick={downloadCSV}>
-                        <FileCsv className="mr-2 h-4 w-4" />
+                        <FileText className="mr-2 h-4 w-4" />
                         Download as CSV
                       </DropdownMenuItem>
                     </DropdownMenuContent>
