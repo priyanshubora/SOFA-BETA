@@ -63,22 +63,43 @@ const extractPortOperationEventsPrompt = ai.definePrompt({
   name: 'extractPortOperationEventsPrompt',
   input: {schema: ExtractPortOperationEventsInputSchema},
   output: {schema: ExtractPortOperationEventsOutputSchema},
-  prompt: `You are an expert maritime logistics AI. Analyze the provided Statement of Fact (SoF) and perform the following three tasks in a single response:
+  prompt: `You are an expert maritime logistics AI with exceptional attention to detail. Your task is to analyze the provided Statement of Fact (SoF) and perform three tasks with the highest level of accuracy and completeness.
 
-1.  **Extract All Details**: Identify every possible piece of information. This includes, but is not limited to:
-    - Vessel/Ship Name (look for "vessel name" or "ship name")
-    - Port of Call
-    - Berth/Anchorage location
-    - Voyage Number
-    - Cargo Description and Quantity
-    - Date/Time Notice of Readiness (NOR) was tendered
-    - All significant port operation events. For each event, extract the event title, category, start and end times (YYYY-MM-DD HH:MM), duration, status, and any remarks.
+**Primary Directive: Do not miss ANY event. Every single line item in the SoF that has a timestamp must be treated as a unique, extractable event.**
 
-2.  **Calculate Laytime**: Perform a laytime calculation. Assume a standard allowed laytime of "3 days". Calculate the total laytime used, time saved (despatch), and extra time (demurrage). Detail which events count towards laytime and why. If demurrage occurs, calculate the cost. Assume a standard demurrage rate of $20,000 per day, prorated for the demurrage duration. Format the result as a currency string (e.g., '$15,500').
+Here are your tasks:
 
-3.  **Summarize Insights**: Provide a brief, bullet-point summary highlighting total port time, cargo operation duration, and major delays.
+1.  **Extract All Details (Comprehensive Extraction)**:
+    -   Go through the document line-by-line. Identify **every single event**, no matter how minor. If it has a date or time, it is an event. This includes short breaks, meetings, weather changes, etc.
+    -   For **each event**, you must extract:
+        -   **event**: A concise title (e.g., "Pilot Onboard", "Commenced cargo discharging", "Tool box meeting").
+        -   **category**: Classify each event into one of these specific categories: 'Arrival', 'Cargo Operations', 'Departure', 'Delays', 'Stoppages', 'Bunkering', 'Anchorage', or 'Other'.
+        -   **startTime**: The start time of the event in \`YYYY-MM-DD HH:MM\` format. Pay close attention to the date column.
+        -   **endTime**: The end time of the event in \`YYYY-MM-DD HH:MM\` format. Often, the end time of one event is the start time of the next. If an event is a single point in time, the start and end times will be the same.
+        -   **duration**: The calculated duration between start and end times (e.g., "2h 30m", "15m"). If start and end are the same, duration is "0m".
+        -   **status**: The status of the event (e.g., 'Completed', 'In Progress', 'Delayed'). Most events will be 'Completed'.
+        -   **remark**: Capture any additional text or notes from the "Remarks" column for that specific event.
+    -   Also extract the following master details from anywhere in the document:
+        -   Vessel/Ship Name
+        -   Port of Call & Berth/Anchorage
+        -   Voyage Number
+        -   Cargo Description and Quantity
+        -   Date/Time Notice of Readiness (NOR) was tendered
 
-Process the following SoF content and return the full analysis in the required JSON format. Ensure all fields in the output schema are populated if the information is present in the document.
+2.  **Calculate Laytime (Detailed Breakdown)**:
+    -   Perform a detailed laytime calculation. Assume a standard allowed laytime of "3 days" unless specified otherwise.
+    -   Analyze each event you extracted. For the \`laytimeEvents\` array, list every event and determine if its duration should be counted towards laytime.
+    -   Provide a clear \`reason\` for why each event is counted or not counted (e.g., "Cargo operations count towards laytime," "Rain delay - time does not count," "Holiday - time does not count").
+    -   Calculate \`totalLaytime\`, \`timeSaved\` (despatch), and \`demurrage\`.
+    -   If demurrage occurs, calculate the \`demurrageCost\` assuming a standard rate of $20,000 per day, prorated for the exact demurrage duration. Format the result as a currency string (e.g., '$15,500.00').
+
+3.  **Summarize Key Insights**:
+    -   Provide a brief, bullet-point summary highlighting the most critical insights, such as:
+        -   Total time spent in port.
+        -   Total time spent on cargo operations.
+        -   Total time lost to major delays or stoppages, specifying the reasons (e.g., weather, equipment failure).
+
+**Process the following SoF content meticulously and return the complete, detailed analysis in the required JSON format. Ensure all fields are populated.**
 
 SoF Content:
 {{{sofContent}}}`,
