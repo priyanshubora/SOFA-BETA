@@ -174,7 +174,7 @@ export default function AppPage() {
                     <Tabs defaultValue="events" className="w-full">
                         <TabsList className="grid w-full grid-cols-3 max-w-2xl mx-auto bg-transparent rounded-lg neumorphic-inset p-1">
                             <TabsTrigger value="events" className="data-[state=active]:neumorphic-outset data-[state=active]:text-primary data-[state=active]:shadow-none rounded-md">Extracted Events</TabsTrigger>
-                            <TabsTrigger value="laytime" className="data-[state=active]:neumorphic-outset data-[state=active]:text-primary data-[state=active]:shadow-none rounded-md">Laytime Analytics</TabsTrigger>
+                            <TabsTrigger value="laytime" disabled={!enrichedData.laytimeCalculation} className="data-[state=active]:neumorphic-outset data-[state=active]:text-primary data-[state=active]:shadow-none rounded-md">Laytime Analytics</TabsTrigger>
                             <TabsTrigger value="timeline" className="data-[state=active]:neumorphic-outset data-[state=active]:text-primary data-[state=active]:shadow-none rounded-md">Event Timeline</TabsTrigger>
                         </TabsList>
                         <TabsContent value="events" className="mt-6">
@@ -184,7 +184,7 @@ export default function AppPage() {
                         </TabsContent>
                         <TabsContent value="laytime" className="mt-6">
                             <div className="p-4 md:p-6 neumorphic-outset rounded-lg">
-                                <LaytimeCalculator laytimeResult={enrichedData.laytimeCalculation} />
+                                <LaytimeCalculator laytimeResult={enrichedData.laytimeCalculation || null} />
                             </div>
                         </TabsContent>
                         <TabsContent value="timeline" className="mt-6">

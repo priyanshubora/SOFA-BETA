@@ -24,6 +24,8 @@ const LaytimeCalculationSchema = z.object({
   demurrageCost: z.string().optional().describe('The calculated cost of demurrage based on the extra time taken and a standard daily rate (e.g., "$20,000").'),
   laytimeEvents: z.array(z.object({
     event: z.string(),
+    startTime: z.string().describe('The start time of the event in YYYY-MM-DD HH:MM format.'),
+    endTime: z.string().describe('The end time of the event in YYYY-MM-DD HH:MM format.'),
     duration: z.string(),
     isCounted: z.boolean().describe('Whether this event duration counts towards the total laytime.'),
     reason: z.string().optional().describe('Reason why the event is or is not counted towards laytime.'),
@@ -63,7 +65,7 @@ const ExtractPortOperationEventsOutputSchema = z.object({
   events: z.array(
     z.object({
       event: z.string().describe('The exact, verbatim text for the port operation event from the remarks column (e.g., "Pilot Attended On Board in the vessel"). Do not summarize or change it.'),
-      category: z.string().describe("The general category of the event (e.g., 'Arrival', 'Cargo Operations', 'Departure', 'Delays')."),
+      category: z.string().describe("The general category of the event (e.g., 'Arrival', 'Cargo Operations', 'Departure', 'Delays', 'Stoppages', 'Bunkering', 'Anchorage', or 'Other')."),
       startTime: z.string().describe('The start time of the event in YYYY-MM-DD HH:MM format.'),
       endTime: z.string().describe('The end time of the event in YYYY-MM-DD HH:MM format.'),
       duration: z.string().describe('The calculated duration of the event (e.g., "2h 30m").'),
@@ -72,8 +74,8 @@ const ExtractPortOperationEventsOutputSchema = z.object({
     })
   ).describe('An array of port operation events with their start and end times, sorted chronologically.'),
   timelineBlocks: z.array(TimelineBlockSchema).optional().describe("An array of merged, overlapping event blocks for timeline visualization."),
-  laytimeCalculation: LaytimeCalculationSchema.describe('The detailed laytime calculation results.'),
-  eventsSummary: z.string().describe('A concise, bulleted summary of the key insights from the port events.'),
+  laytimeCalculation: LaytimeCalculationSchema.optional().describe('The detailed laytime calculation results.'),
+  eventsSummary: z.string().optional().describe('A concise, bulleted summary of the key insights from the port events.'),
 });
 export type ExtractPortOperationEventsOutput = z.infer<typeof ExtractPortOperationEventsOutputSchema>;
 
@@ -122,7 +124,7 @@ Here are your tasks:
         -   Total time spent on cargo operations.
         -   Total time lost to major delays or stoppages, specifying the reasons (e.g., weather, equipment failure).
 
-**Process the following SoF content meticulously and return the complete, detailed analysis in the required JSON format. Ensure all fields are populated.**
+**Process the following SoF content meticulously and return the complete, detailed analysis in the required JSON format. If you cannot reliably calculate laytime or the summary, you may omit those fields, but you MUST return the vesselName and the full list of events.**
 
 SoF Content:
 {{{sofContent}}}`,

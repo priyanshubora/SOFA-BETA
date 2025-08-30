@@ -61,6 +61,10 @@ export function FloatingAiAssistant({ extractedData }: FloatingAiAssistantProps)
         const insightMessage: Message = { role: "assistant", content: `Here are some insights for **${extractedData.vesselName}**:\n\n${extractedData.eventsSummary}` };
         setMessages(prev => [...prev, insightMessage]);
         setHasNewInsight(true);
+    } else if (extractedData) {
+        const insightMessage: Message = { role: "assistant", content: `I've successfully extracted the events for **${extractedData.vesselName}**. However, I was unable to generate an automated summary for this document.` };
+        setMessages(prev => [...prev, insightMessage]);
+        setHasNewInsight(true);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [extractedData]);
