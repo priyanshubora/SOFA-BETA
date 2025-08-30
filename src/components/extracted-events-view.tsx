@@ -17,7 +17,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Download, ListTree, Ship, GanttChartSquare, Anchor, Weight, CalendarClock } from "lucide-react";
+import { Download, ListTree, Ship, GanttChartSquare, Anchor, Weight, CalendarClock, Clock } from "lucide-react";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "./ui/accordion";
 import { useMemo } from "react";
 import { Button } from "./ui/button";
@@ -54,17 +54,56 @@ export function ExtractedEventsView({ extractedData }: ExtractedEventsViewProps)
     downloadAnchorNode.remove();
   };
   
-  const groupedEvents = useMemo(() => {
+  type MergedEvent = (typeof extractedData.events[0]) & { subEvents?: typeof extractedData.events };
+
+  const mergedAndGroupedEvents = useMemo(() => {
     if (!extractedData) return {};
-    return extractedData.events.reduce((acc, event) => {
+    
+    // First, merge events that have the same start and end time
+    const eventMap: Record<string, MergedEvent> = {};
+    const mergedEvents: MergedEvent[] = [];
+
+    extractedData.events.forEach(event => {
+      if (event.startTime === event.endTime) {
+        const key = event.startTime;
+        if (!eventMap[key]) {
+          eventMap[key] = {
+            ...event,
+            event: `Multiple Events at ${event.startTime}`,
+            remark: 'See sub-events',
+            subEvents: [],
+          };
+        }
+        eventMap[key].subEvents!.push(event);
+      } else {
+        mergedEvents.push(event);
+      }
+    });
+
+    Object.values(eventMap).forEach(merged => {
+      if (merged.subEvents && merged.subEvents.length > 1) {
+        mergedEvents.push(merged);
+      } else if (merged.subEvents && merged.subEvents.length === 1) {
+        // If only one event, don't merge, just add it as is
+        mergedEvents.push(merged.subEvents[0]);
+      }
+    });
+
+    // Sort events by start time
+    mergedEvents.sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime());
+    
+    // Then, group events by category
+    return mergedEvents.reduce((acc, event) => {
       const category = event.category || 'Uncategorized';
       if (!acc[category]) {
         acc[category] = [];
       }
       acc[category].push(event);
       return acc;
-    }, {} as Record<string, typeof extractedData.events>);
+    }, {} as Record<string, MergedEvent[]>);
+    
   }, [extractedData]);
+
 
   if (!extractedData || extractedData.events.length === 0) {
     return (
@@ -118,8 +157,8 @@ export function ExtractedEventsView({ extractedData }: ExtractedEventsViewProps)
             </CardHeader>
             <Card className="border-none shadow-none">
               <CardContent className="p-0">
-                <Accordion type="multiple" defaultValue={Object.keys(groupedEvents)} className="w-full">
-                  {Object.entries(groupedEvents).map(([category, events]) => (
+                <Accordion type="multiple" defaultValue={Object.keys(mergedAndGroupedEvents)} className="w-full">
+                  {Object.entries(mergedAndGroupedEvents).map(([category, events]) => (
                     <AccordionItem value={category} key={category}>
                       <AccordionTrigger className="text-lg font-semibold text-primary/90 hover:no-underline px-1 py-4">
                         <div className="flex items-center gap-2">
@@ -142,14 +181,26 @@ export function ExtractedEventsView({ extractedData }: ExtractedEventsViewProps)
                                 </TableHeader>
                                 <TableBody>
                                     {events.map((event, index) => (
-                                    <TableRow key={index}>
-                                        <TableCell className="font-medium">{event.event}</TableCell>
-                                        <TableCell>{event.startTime}</TableCell>
-                                        <TableCell>{event.endTime}</TableCell>
-                                        <TableCell>{event.duration}</TableCell>
-                                        <TableCell><Badge variant={event.status === 'Completed' ? 'default' : 'destructive'} className={cn(event.status === 'Completed' && "bg-green-600")}>{event.status}</Badge></TableCell>
-                                        <TableCell>{event.remark}</TableCell>
-                                    </TableRow>
+                                      <React.Fragment key={index}>
+                                        <TableRow>
+                                            <TableCell className="font-medium">{event.event}</TableCell>
+                                            <TableCell>{event.startTime}</TableCell>
+                                            <TableCell>{event.endTime}</TableCell>
+                                            <TableCell>{event.duration}</TableCell>
+                                            <TableCell><Badge variant={event.status === 'Completed' ? 'default' : 'destructive'} className={cn(event.status === 'Completed' && "bg-green-600")}>{event.status}</Badge></TableCell>
+                                            <TableCell>{event.remark}</TableCell>
+                                        </TableRow>
+                                        {event.subEvents && event.subEvents.map((subEvent, subIndex) => (
+                                            <TableRow key={`${index}-${subIndex}`} className="bg-muted/50">
+                                                <TableCell className="pl-12 text-muted-foreground"><span className="mr-2">↳</span>{subEvent.event}</TableCell>
+                                                <TableCell className="text-muted-foreground">{subEvent.startTime}</TableCell>
+                                                <TableCell className="text-muted-foreground">{subEvent.endTime}</TableCell>
+                                                <TableCell className="text-muted-foreground">{subEvent.duration}</TableCell>
+                                                <TableCell><Badge variant={subEvent.status === 'Completed' ? 'secondary' : 'destructive'} className={cn(subEvent.status === 'Completed' && "bg-green-600/50")}>{subEvent.status}</Badge></TableCell>
+                                                <TableCell className="text-muted-foreground">{subEvent.remark}</TableCell>
+                                            </TableRow>
+                                        ))}
+                                      </React.Fragment>
                                     ))}
                                 </TableBody>
                             </Table>
