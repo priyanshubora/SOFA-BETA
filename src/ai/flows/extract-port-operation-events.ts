@@ -3,7 +3,7 @@
  * @fileOverview This file defines a Genkit flow for extracting port operation events from Statements of Fact (SoFs).
  * It also calculates laytime and summarizes the events in a single operation.
  *
- * - extractPortOperationEvents - A function that takes the content of an SoF and returns structured data.
+ * - extractPortOperationEvents - A function that takes the content of an SoF and returns structured data, laytime calculations, and a summary.
  * - ExtractPortOperationEventsInput - The input type for the extractPortOperationEvents function.
  * - ExtractPortOperationEventsOutput - The return type for the extractPortOperationEvents function.
  */
@@ -24,10 +24,10 @@ const LaytimeCalculationSchema = z.object({
   demurrageCost: z.string().optional().describe('The calculated cost of demurrage based on the extra time taken and a standard daily rate (e.g., "$20,000").'),
   laytimeEvents: z.array(z.object({
     event: z.string(),
-    startTime: z.string().describe('The start time of the event in YYYY-MM-DD HH:MM format.'),
-    endTime: z.string().describe('The end time of the event in YYYY-MM-DD HH:MM format.'),
-    duration: z.string(),
-    isCounted: z.boolean().optional().describe('Whether this event duration counts towards the total laytime.'),
+    startTime: z.string().optional().describe('The start time of the event in YYYY-MM-DD HH:MM format .'),
+    endTime: z.string().optional().describe('The end time of the event in YYYY-MM-DD HH:MM format  .'),
+    duration: z.string().optional().describe('The duration of the event (e.g., "2h 30m"). If not calculable, leave empty or "Not Mentioned."'),
+    isCounted: z.boolean().describe('Whether this event duration counts towards the total laytime.'),
     reason: z.string().optional().describe('Reason why the event is or is not counted towards laytime.'),
   })).describe('A breakdown of each event and whether it contributed to the laytime.'),
 });
@@ -35,21 +35,21 @@ export type LaytimeCalculation = z.infer<typeof LaytimeCalculationSchema>;
 
 const SubEventSchema = z.object({
     event: z.string(),
-    category: z.string(),
-    startTime: z.string(),
-    endTime: z.string(),
-    duration: z.string(),
-    status: z.string(),
+    category: z.string().optional(),
+    startTime: z.string().optional().describe('The start time of the event in YYYY-MM-DD HH:MM format  .'),
+    endTime: z.string().optional().describe('The end time of the event in YYYY-MM-DD HH:MM format  .'),
+    duration: z.string().optional().describe('The duration of the event (e.g., "2h 30m"). If not calculable, leave empty or "Not Mentioned."'),
+    status: z.string().optional().describe("status of the event. If not calculable, leave empty or 'Not Mentioned."),
     remark: z.string().optional(),
 });
 
 const TimelineBlockSchema = z.object({
     name: z.string(),
-    category: z.string(),
+    category: z.string().optional(),
     time: z.tuple([z.number(), z.number()]),
-    duration: z.string(),
-    startTime: z.string(),
-    endTime: z.string(),
+    duration: z.string().optional().describe("Duration of the event. If not calculable, leave empty or 'Not Mentioned."),
+    startTime: z.string().optional().describe('The start time of the event in YYYY-MM-DD HH:MM format .'),
+    endTime: z.string().optional().describe('The end time of the event in YYYY-MM-DD HH:MM format  .'),
     subEvents: z.array(SubEventSchema),
 }).describe("A block of merged, overlapping events for timeline visualization.");
 export type TimelineBlock = z.infer<typeof TimelineBlockSchema>;
@@ -65,11 +65,11 @@ const ExtractPortOperationEventsOutputSchema = z.object({
   events: z.array(
     z.object({
       event: z.string().describe('The exact, verbatim text for the port operation event from the remarks column (e.g., "Pilot Attended On Board in the vessel"). Do not summarize or change it.'),
-      category: z.string().describe("The general category of the event (e.g., 'Arrival', 'Cargo Operations', 'Departure', 'Delays', 'Stoppages', 'Bunkering', 'Anchorage', or 'Other')."),
-      startTime: z.string().optional().describe('The start time of the event in YYYY-MM-DD HH:MM format.'),
-      endTime: z.string().optional().describe('The end time of the event in YYYY-MM-DD HH:MM format.'),
-      duration: z.string().optional().describe('The calculated duration of the event (e.g., "2h 30m").'),
-      status: z.string().optional().describe("The status of the event (e.g., 'Completed', 'In Progress', 'Delayed')."),
+      category: z.string().optional().describe("The general category of the event (e.g., 'Arrival', 'Cargo Operations', 'Departure', 'Delays', 'Stoppages', 'Bunkering', 'Anchorage', or 'Other')."),
+      startTime: z.string().optional().describe('The start time of the event in YYYY-MM-DD HH:MM format  .'),
+      endTime: z.string().optional().describe('The end time of the event in YYYY-MM-DD HH:MM format .'),
+      duration: z.string().optional().describe("Duration of the event. If not calculable, leave empty or 'Not Mentioned."),
+      status: z.string().describe("The status of the event (e.g., 'Completed', 'In Progress', 'Delayed')."),
       remark: z.string().optional().describe('Any additional notes, comments or details about the event from the SoF.')
     })
   ).describe('An array of port operation events with their start and end times, sorted chronologically.'),
@@ -86,34 +86,60 @@ export async function extractPortOperationEvents(input: ExtractPortOperationEven
 const extractPortOperationEventsPrompt = ai.definePrompt({
   name: 'extractPortOperationEventsPrompt',
   input: {schema: ExtractPortOperationEventsInputSchema},
-  output: {schema: ExtractPortOperationEventsOutputSchema.omit({ timelineBlocks: true, laytimeCalculation: true, eventsSummary: true })},
-  prompt: `You are an expert maritime logistics AI with exceptional attention to detail. Your task is to analyze the provided Statement of Fact (SoF) and extract all events with the highest level of accuracy and completeness.
+  output: {schema: ExtractPortOperationEventsOutputSchema.omit({ timelineBlocks: true })},
+  prompt: `You are an expert maritime logistics AI with exceptional attention to detail. Your task is to analyze the provided Statement of Fact (SoF) and perform three tasks with the highest level of accuracy and completeness.
 
-**Primary Directive: Do not miss ANY event. Every single line item in the SoF that has a timestamp must be treated as a unique, extractable event.**
+**Primary Directive: Do not miss ANY event. Every single line item in the SoF that has a timestamp or not  must be treated as a unique, extractable event.**
 
 Here are your tasks:
 
-1.  **Extract All Details (Comprehensive Extraction)**:
-    -   Go through the document line-by-line. Identify **every single event**, no matter how minor. If it has a date or time, it is an event.
+1.  **Extract All Details (Comprehensive Extraction)**:this is the most critical part of your task and should be done in any condition
+    -   Go through the document line-by-line nothing should be missed.
+    Identify **every single event**, no matter how minor. If it has a date or time, it is an event. This includes short breaks, meetings, weather changes, etc.
     -   For **each event**, you must extract:
-        -   'event': Use the **exact, verbatim text** from the "Remarks" column of the SoF. Do NOT summarize or rephrase.
-        -   'category': Classify each event into one of these specific categories: 'Arrival', 'Cargo Operations', 'Departure', 'Delays', 'Stoppages', 'Bunkering', 'Anchorage', or 'Other'.
-        -   'startTime': The start time of the event in \`YYYY-MM-DD HH:MM\` format.
-        -   'endTime': The end time of the event in \`YYYY-MM-DD HH:MM\` format.
-        -   'duration': The calculated duration between start and end times (e.g., "2h 30m"). If start and end are the same, duration is "0m".
-        -   'status': The status of the event (e.g., 'Completed', 'In Progress', 'Delayed'). Most events will be 'Completed'.
-        -   'remark': Capture any additional text or notes from the "Remarks" column for that specific event.
-    -   Also extract the following master details from anywhere in the document: Vessel Name, Port of Call, Voyage Number, etc.
-    -   **Crucially, ensure the final list of events is sorted chronologically by 'startTime'**.
+   - and if multiple events are same like ramdan or something like that make them one 
+        -   **event**: Use the **exact, verbatim text** from the "Remarks" column of the SoF. Do NOT summarize or rephrase. For example, if the SoF says "Pilot Attended On Board in the vessel", you must use that exact phrase.
+        -   **category**: Classify each event into one of these specific categories: 'Arrival', 'Cargo Operations', 'Departure', 'Delays', 'Stoppages', 'Bunkering', 'Anchorage', or 'Other'.
+        -   **startTime**: The start time of the event in \`YYYY-MM-DD HH:MM\` format. Pay close attention to the date column.
+        -   **endTime**: The end time of the event in \`YYYY-MM-DD HH:MM\` format. Often, the end time of one event is the start time of the next. If an event is a single point in time, the start and end times will be the same.
+        -   **duration**: The calculated duration between start and end times (e.g., "2h 30m", "15m"). If start and end are the same, duration is "0m".
+        -   **status**: The status of the event (e.g., 'Completed', 'In Progress', 'Delayed'). Most events will be 'Completed'.
+        -   **remark**: Capture any additional text or notes from the "Remarks" column for that specific event.
+    -   Also extract the following master details from anywhere in the document:
+        -   Vessel/Ship Name/vesselName
+        -   Port of Call & Berth/Anchorage
+        -   Voyage Number
+        -   Cargo Description and Quantity
+        -   Date/Time Notice of Readiness (NOR) was tendered
+    -   **Crucially, ensure the final list of events is sorted chronologically by \`startTime\`**.
+    -   ** if any of the details are missing  do not crash just leave it empty or show not mentioned
 
-2.  **CRITICAL RULE FOR END TIMES**:
-    -   Events in the SoF are always listed in chronological order.
-    -   If an event has a 'startTime' but no explicit 'endTime' is mentioned for it, you **MUST** infer the 'endTime'.
-    -   The 'endTime' for an event is the 'startTime' of the very next event in the sequence.
-    -   If an event is the very last one, or if it represents a single point in time (like 'NOR Tendered'), its 'endTime' should be the same as its 'startTime'.
-    -   You must apply this logic to ensure every single event has a valid 'endTime', which is necessary to calculate the 'duration'.
+2.  **Calculate Laytime (Detailed Breakdown)**:
+    -   Perform a detailed laytime calculation. Assume a standard allowed laytime of "3 days" unless specified otherwise.
+    -   Analyze each event you extracted. For the \`laytimeEvents\` array, list every event and determine if its duration should be counted towards laytime.
+    -   Provide a clear \`reason\` for why each event is counted or not counted (e.g., "Cargo operations count towards laytime," "Rain delay - time does not count," "Holiday - time does not count").
+    -   Calculate \`totalLaytime\`, \`timeSaved\` (despatch), and \`demurrage\`.
+    -   If demurrage occurs, calculate the \`demurrageCost\` assuming a standard rate of $20,000 per day, prorated for the exact demurrage duration. Format the result as a currency string (e.g., '$15,500.00').
+    -   if the information needed for laytime is not present then should not crash just leave it empty or show not mentioned
 
-**Process the following SoF content meticulously and return the complete, detailed analysis in the required JSON format. You MUST return the vesselName and the full list of events.**
+3.  **Summarize Key Insights**:
+    -   Provide a brief, bullet-point summary highlighting the most critical insights, such as:
+        -   Total time spent in port.
+        -   Total time spent on cargo operations.
+        -   Total time lost to major delays or stoppages, specifying the reasons (e.g., weather, equipment failure).
+        ** if any of the details are missing  do not crash just leave it empty or show not mentioned
+        
+4.  **Important**:
+- focus on start time and end if not given then take previous value or above values end time as start time and if end time is not present take same value as start time from the event after it or below as all the values are in order .     
++ If **startTime** is missing, always use the **previous event's endTime**.  
++ If **endTime** is missing, always use the **next event's startTime**.  
++ If both are missing, set startTime = previous event’s endTime and endTime = next event’s startTime.  
++ If there is no previous or next event available, set both equal to whatever time reference is available (but never leave them empty).
+
+
+** if any of the details are missing  do not crash just leave it empty or show not mentioned extraction should run in any condition
+
+**Process the following SoF content meticulously and return the complete, detailed analysis in the required JSON format. If you cannot reliably calculate laytime or the summary, you may omit those fields, but you MUST return the vesselName and the full list of events.**
 
 SoF Content:
 {{{sofContent}}}`,
@@ -127,16 +153,8 @@ const extractPortOperationEventsFlow = ai.defineFlow(
   },
   async input => {
     const {output} = await extractPortOperationEventsPrompt(input);
-
-    if (output && output.events) {
-      // Filter out any events that are missing critical information
-      output.events = output.events.filter(event => event.event && event.startTime && event.endTime);
-    }
-
-    // The AI is not responsible for creating timeline blocks, laytime, or summaries.
+    // The AI is not responsible for creating timeline blocks, so we can return the output as is.
     // The frontend will handle the creation of timeline blocks.
     return output as ExtractPortOperationEventsOutput;
   }
 );
-
-    

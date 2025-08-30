@@ -41,17 +41,23 @@ export default function AppPage() {
     if (!extractedData?.events || extractedData.events.length === 0) {
       return extractedData;
     }
+    
+    const validEvents = extractedData.events.filter(e => e.startTime && e.endTime);
 
-    const sortedEvents = [...extractedData.events].sort((a, b) => parseISO(a.startTime).getTime() - parseISO(b.startTime).getTime());
-    const firstEventTime = parseISO(sortedEvents[0].startTime);
+    if (validEvents.length === 0) {
+      return { ...extractedData, timelineBlocks: [] };
+    }
+
+    const sortedEvents = [...validEvents].sort((a, b) => parseISO(a.startTime!).getTime() - parseISO(b.startTime!).getTime());
+    const firstEventTime = parseISO(sortedEvents[0].startTime!);
 
     const mergedBlocks: TimelineBlock[] = [];
     if (sortedEvents.length > 0) {
       let currentBlock: TimelineBlock | null = null;
 
       for (const event of sortedEvents) {
-        const eventStart = parseISO(event.startTime);
-        const eventEnd = parseISO(event.endTime);
+        const eventStart = parseISO(event.startTime!);
+        const eventEnd = parseISO(event.endTime!);
 
         if (!currentBlock) {
           currentBlock = {
@@ -64,13 +70,13 @@ export default function AppPage() {
             subEvents: [event],
           };
         } else {
-          const blockEndDate = max(currentBlock.subEvents.map(e => parseISO(e.endTime)));
+          const blockEndDate = max(currentBlock.subEvents.map(e => parseISO(e.endTime!)));
           
           if (eventStart < blockEndDate) {
             currentBlock.subEvents.push(event);
             const newEndDate = max([blockEndDate, eventEnd]);
             currentBlock.endTime = format(newEndDate, 'HH:mm');
-            const blockStartDate = min(currentBlock.subEvents.map(e => parseISO(e.startTime)));
+            const blockStartDate = min(currentBlock.subEvents.map(e => parseISO(e.startTime!)));
             currentBlock.time = [differenceInHours(blockStartDate, firstEventTime), differenceInHours(newEndDate, firstEventTime)];
           } else {
             mergedBlocks.push(currentBlock);
@@ -92,8 +98,8 @@ export default function AppPage() {
     }
     
     const finalBlocks = mergedBlocks.map(block => {
-        const start = min(block.subEvents.map(e => parseISO(e.startTime)));
-        const end = max(block.subEvents.map(e => parseISO(e.endTime)));
+        const start = min(block.subEvents.map(e => parseISO(e.startTime!)));
+        const end = max(block.subEvents.map(e => parseISO(e.endTime!)));
         const totalDurationHours = differenceInHours(end, start);
         const days = Math.floor(totalDurationHours / 24);
         const hours = Math.floor(totalDurationHours % 24);
@@ -101,8 +107,8 @@ export default function AppPage() {
 
         const name = block.subEvents.length > 1 ? `${block.subEvents.length} Overlapping Events` : block.subEvents[0].event;
         const mainCategory = block.subEvents.reduce((longest, current) => {
-            const longestDuration = differenceInHours(parseISO(longest.endTime), parseISO(longest.startTime));
-            const currentDuration = differenceInHours(parseISO(current.endTime), parseISO(current.startTime));
+            const longestDuration = differenceInHours(parseISO(longest.endTime!), parseISO(longest.startTime!));
+            const currentDuration = differenceInHours(parseISO(current.endTime!), parseISO(current.startTime!));
             return currentDuration > longestDuration ? current : longest;
         }).category;
 
