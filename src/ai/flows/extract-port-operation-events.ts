@@ -27,7 +27,7 @@ const LaytimeCalculationSchema = z.object({
     startTime: z.string().describe('The start time of the event in YYYY-MM-DD HH:MM format.'),
     endTime: z.string().describe('The end time of the event in YYYY-MM-DD HH:MM format.'),
     duration: z.string(),
-    isCounted: z.boolean().describe('Whether this event duration counts towards the total laytime.'),
+    isCounted: z.boolean().optional().describe('Whether this event duration counts towards the total laytime.'),
     reason: z.string().optional().describe('Reason why the event is or is not counted towards laytime.'),
   })).describe('A breakdown of each event and whether it contributed to the laytime.'),
 });
@@ -140,6 +140,13 @@ const extractPortOperationEventsFlow = ai.defineFlow(
   },
   async input => {
     const {output} = await extractPortOperationEventsPrompt(input);
+
+    if (output?.laytimeCalculation?.laytimeEvents) {
+      output.laytimeCalculation.laytimeEvents = output.laytimeCalculation.laytimeEvents.filter(
+        event => event.isCounted !== undefined && event.isCounted !== null
+      );
+    }
+    
     // The AI is not responsible for creating timeline blocks, so we can return the output as is.
     // The frontend will handle the creation of timeline blocks.
     return output as ExtractPortOperationEventsOutput;
