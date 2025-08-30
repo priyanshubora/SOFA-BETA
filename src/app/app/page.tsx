@@ -1,16 +1,17 @@
 
 "use client";
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import dynamic from 'next/dynamic';
 import { SoFProcessor } from '@/components/sof-processor';
 import { Anchor, ArrowLeft, Home as HomeIcon } from 'lucide-react';
-import type { ExtractPortOperationEventsOutput } from '@/ai/flows/extract-port-operation-events';
+import type { ExtractPortOperationEventsOutput, TimelineBlock } from '@/ai/flows/extract-port-operation-events';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { Skeleton } from '@/components/ui/skeleton';
+import { parseISO, differenceInHours, format, max, min } from 'date-fns';
 
 const ClientOceanBackground = dynamic(() => import('@/components/client-ocean-background').then(mod => mod.ClientOceanBackground), {
   ssr: false,
@@ -33,9 +34,93 @@ const AnalyticsDashboard = dynamic(() => import('@/components/analytics-dashboar
     loading: () => <Skeleton className="h-[500px] w-full" />,
 });
 
-
 export default function AppPage() {
   const [extractedData, setExtractedData] = useState<ExtractPortOperationEventsOutput | null>(null);
+
+  const enrichedData = useMemo(() => {
+    if (!extractedData?.events || extractedData.events.length === 0) {
+      return extractedData;
+    }
+     // Sort events by start time, which is crucial for merging
+    const sortedEvents = [...extractedData.events].sort((a, b) => parseISO(a.startTime).getTime() - parseISO(b.startTime).getTime());
+    const firstEventTime = parseISO(sortedEvents[0].startTime);
+
+    // Merge overlapping or adjacent events into blocks
+    const mergedBlocks: TimelineBlock[] = [];
+    if (sortedEvents.length > 0) {
+      let currentBlock: TimelineBlock | null = null;
+
+      for (const event of sortedEvents) {
+        const eventStart = parseISO(event.startTime);
+        const eventEnd = parseISO(event.endTime);
+
+        if (currentBlock === null) {
+          // Start the first block
+          currentBlock = {
+            name: 'Block', // Placeholder name
+            category: 'Timeline',
+            subEvents: [event],
+            startTime: format(eventStart, 'MMM d, HH:mm'),
+            endTime: format(eventEnd, 'HH:mm'),
+            time: [differenceInHours(eventStart, firstEventTime), differenceInHours(eventEnd, firstEventTime)],
+            duration: event.duration,
+          };
+        } else {
+          const blockEndDate = max(currentBlock.subEvents.map(e => parseISO(e.endTime)));
+          
+          // Check for overlap: event starts before the current block ends
+          if (eventStart.getTime() < blockEndDate.getTime()) {
+            currentBlock.subEvents.push(event);
+            const blockStartDate = parseISO(currentBlock.subEvents[0].startTime);
+            
+            const newEndDate = max([blockEndDate, eventEnd]);
+            currentBlock.endTime = format(newEndDate, 'HH:mm');
+            currentBlock.time = [differenceInHours(blockStartDate, firstEventTime), differenceInHours(newEndDate, firstEventTime)];
+          } else {
+            mergedBlocks.push(currentBlock);
+            currentBlock = {
+              name: 'Block',
+              category: 'Timeline',
+              subEvents: [event],
+              startTime: format(eventStart, 'MMM d, HH:mm'),
+              endTime: format(eventEnd, 'HH:mm'),
+              time: [differenceInHours(eventStart, firstEventTime), differenceInHours(eventEnd, firstEventTime)],
+              duration: event.duration,
+            };
+          }
+        }
+      }
+      if (currentBlock) {
+        mergedBlocks.push(currentBlock);
+      }
+    }
+    
+    // Post-process blocks to determine name, color, and final duration
+    const finalBlocks = mergedBlocks.map(block => {
+        const longestEvent = block.subEvents.reduce((longest, current) => {
+            const longestDuration = differenceInHours(parseISO(longest.endTime), parseISO(longest.startTime));
+            const currentDuration = differenceInHours(parseISO(current.endTime), parseISO(current.startTime));
+            return currentDuration > longestDuration ? current : longest;
+        });
+
+        const start = parseISO(block.subEvents[0].startTime);
+        const end = max(block.subEvents.map(e => parseISO(e.endTime)));
+        const totalDurationHours = differenceInHours(end, start);
+        const days = Math.floor(totalDurationHours / 24);
+        const hours = Math.floor(totalDurationHours % 24);
+        const minutes = Math.round((totalDurationHours - (days * 24) - hours) * 60);
+
+        return {
+          ...block,
+          name: block.subEvents.length > 1 ? `${block.subEvents.length} Overlapping Events` : block.subEvents[0].event,
+          category: longestEvent.category,
+          duration: `${days > 0 ? `${days}d ` : ''}${hours}h ${minutes}m`,
+        }
+    });
+
+    return { ...extractedData, timelineBlocks: finalBlocks };
+
+  }, [extractedData]);
 
   const handleDataExtracted = (data: ExtractPortOperationEventsOutput) => {
     setExtractedData(data);
@@ -70,7 +155,7 @@ export default function AppPage() {
         </header>
 
         <div className="w-full max-w-7xl grid grid-cols-1 gap-8 flex-1">
-            {!extractedData ? (
+            {!enrichedData ? (
                 <div className="max-w-3xl mx-auto w-full p-4 md:p-6 rounded-lg neumorphic-outset">
                     <SoFProcessor 
                         onDataExtracted={handleDataExtracted} 
@@ -80,7 +165,7 @@ export default function AppPage() {
                 <div className="space-y-6">
                      <div className="flex items-center justify-between">
                         <div className='space-y-1'>
-                            <h2 className="text-2xl font-bold tracking-tight">Vessel: {extractedData.vesselName}</h2>
+                            <h2 className="text-2xl font-bold tracking-tight">Vessel: {enrichedData.vesselName}</h2>
                             <p className="text-muted-foreground">
                                 Analysis dashboard for the processed Statement of Fact.
                             </p>
@@ -99,17 +184,17 @@ export default function AppPage() {
                         </TabsList>
                         <TabsContent value="events" className="mt-6">
                             <div className="p-4 md:p-6 neumorphic-outset rounded-lg">
-                                <ExtractedEventsView extractedData={extractedData} />
+                                <ExtractedEventsView extractedData={enrichedData} />
                             </div>
                         </TabsContent>
                         <TabsContent value="laytime" className="mt-6">
                             <div className="p-4 md:p-6 neumorphic-outset rounded-lg">
-                                <LaytimeCalculator laytimeResult={extractedData.laytimeCalculation} />
+                                <LaytimeCalculator laytimeResult={enrichedData.laytimeCalculation} />
                             </div>
                         </TabsContent>
                         <TabsContent value="timeline" className="mt-6">
                              <div className="p-4 md:p-6 neumorphic-outset rounded-lg">
-                                <AnalyticsDashboard extractedData={extractedData} />
+                                <AnalyticsDashboard timelineBlocks={enrichedData.timelineBlocks || []} />
                             </div>
                         </TabsContent>
                     </Tabs>
@@ -117,7 +202,7 @@ export default function AppPage() {
             )}
         </div>
       </main>
-      <FloatingAiAssistant extractedData={extractedData} />
+      <FloatingAiAssistant extractedData={enrichedData} />
     </div>
   );
 }

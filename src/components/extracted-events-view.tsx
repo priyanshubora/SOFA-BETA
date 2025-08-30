@@ -2,7 +2,7 @@
 "use client"
 
 import * as React from "react";
-import type { ExtractPortOperationEventsOutput } from "@/ai/flows/extract-port-operation-events";
+import type { ExtractPortOperationEventsOutput, TimelineBlock } from "@/ai/flows/extract-port-operation-events";
 import {
   Card,
   CardContent,
@@ -49,7 +49,7 @@ export function ExtractedEventsView({ extractedData }: ExtractedEventsViewProps)
     const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(extractedData, null, 2));
     const downloadAnchorNode = document.createElement('a');
     downloadAnchorNode.setAttribute("href", dataStr);
-    downloadAnchorNode.setAttribute("download", `${extractedData.vesselName.replace(/\s+/g, '_')}_sof_events.json`);
+    downloadAnchorNode.setAttribute("download", `${extractedData.vesselName.replace(/\s+/g, '_')}_sof_analysis.json`);
     document.body.appendChild(downloadAnchorNode);
     downloadAnchorNode.click();
     downloadAnchorNode.remove();
@@ -60,7 +60,7 @@ export function ExtractedEventsView({ extractedData }: ExtractedEventsViewProps)
   const groupedEvents = useMemo(() => {
     if (!extractedData) return {};
     
-    // Sort events by start time first
+    // Sort events by start time first - this is now guaranteed by the AI but good practice to ensure.
     const sortedEvents = [...extractedData.events].sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime());
     
     // Then, group events by category

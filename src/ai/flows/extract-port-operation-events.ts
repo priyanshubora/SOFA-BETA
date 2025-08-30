@@ -31,6 +31,17 @@ const LaytimeCalculationSchema = z.object({
 });
 export type LaytimeCalculation = z.infer<typeof LaytimeCalculationSchema>;
 
+const TimelineBlockSchema = z.object({
+    name: z.string(),
+    category: z.string(),
+    time: z.tuple([z.number(), z.number()]),
+    duration: z.string(),
+    startTime: z.string(),
+    endTime: z.string(),
+    subEvents: z.array(z.any()), // Keeping this simple for now
+}).describe("A block of merged, overlapping events for timeline visualization.");
+export type TimelineBlock = z.infer<typeof TimelineBlockSchema>;
+
 const ExtractPortOperationEventsOutputSchema = z.object({
   vesselName: z.string().describe("The name of the vessel (or ship) mentioned in the SoF. Look for 'Vessel Name' or 'Ship Name'."),
   portOfCall: z.string().optional().describe("The port where the operations are taking place."),
@@ -41,15 +52,16 @@ const ExtractPortOperationEventsOutputSchema = z.object({
   noticeOfReadinessTendered: z.string().optional().describe("The date and time when the Notice of Readiness (NOR) was tendered."),
   events: z.array(
     z.object({
-      event: z.string().describe('A concise title for the port operation event (e.g., "Pilot Onboard", "Cargo Discharging").'),
+      event: z.string().describe('The exact, verbatim text for the port operation event from the remarks column (e.g., "Pilot Attended On Board in the vessel"). Do not summarize or change it.'),
       category: z.string().describe("The general category of the event (e.g., 'Arrival', 'Cargo Operations', 'Departure', 'Delays')."),
       startTime: z.string().describe('The start time of the event in YYYY-MM-DD HH:MM format.'),
       endTime: z.string().describe('The end time of the event in YYYY-MM-DD HH:MM format.'),
       duration: z.string().describe('The calculated duration of the event (e.g., "2h 30m").'),
-      status: z.string().describe("The status of the event (e.g., 'Completed', 'In Progress', 'Delayed')."),
+      status: zstring().describe("The status of the event (e.g., 'Completed', 'In Progress', 'Delayed')."),
       remark: z.string().optional().describe('Any additional notes, comments or details about the event from the SoF.')
     })
-  ).describe('An array of port operation events with their start and end times.'),
+  ).describe('An array of port operation events with their start and end times, sorted chronologically.'),
+  timelineBlocks: z.array(TimelineBlockSchema).optional().describe("An array of merged, overlapping event blocks for timeline visualization."),
   laytimeCalculation: LaytimeCalculationSchema.describe('The detailed laytime calculation results.'),
   eventsSummary: z.string().describe('A concise, bulleted summary of the key insights from the port events.'),
 });
@@ -72,7 +84,7 @@ Here are your tasks:
 1.  **Extract All Details (Comprehensive Extraction)**:
     -   Go through the document line-by-line. Identify **every single event**, no matter how minor. If it has a date or time, it is an event. This includes short breaks, meetings, weather changes, etc.
     -   For **each event**, you must extract:
-        -   **event**: A concise title (e.g., "Pilot Onboard", "Commenced cargo discharging", "Tool box meeting").
+        -   **event**: Use the **exact, verbatim text** from the "Remarks" column of the SoF. Do NOT summarize or rephrase. For example, if the SoF says "Pilot Attended On Board in the vessel", you must use that exact phrase.
         -   **category**: Classify each event into one of these specific categories: 'Arrival', 'Cargo Operations', 'Departure', 'Delays', 'Stoppages', 'Bunkering', 'Anchorage', or 'Other'.
         -   **startTime**: The start time of the event in \`YYYY-MM-DD HH:MM\` format. Pay close attention to the date column.
         -   **endTime**: The end time of the event in \`YYYY-MM-DD HH:MM\` format. Often, the end time of one event is the start time of the next. If an event is a single point in time, the start and end times will be the same.
@@ -85,6 +97,7 @@ Here are your tasks:
         -   Voyage Number
         -   Cargo Description and Quantity
         -   Date/Time Notice of Readiness (NOR) was tendered
+    -   **Crucially, ensure the final list of events is sorted chronologically by \`startTime\`**.
 
 2.  **Calculate Laytime (Detailed Breakdown)**:
     -   Perform a detailed laytime calculation. Assume a standard allowed laytime of "3 days" unless specified otherwise.
