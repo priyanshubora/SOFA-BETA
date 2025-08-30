@@ -66,10 +66,10 @@ const ExtractPortOperationEventsOutputSchema = z.object({
     z.object({
       event: z.string().describe('The exact, verbatim text for the port operation event from the remarks column (e.g., "Pilot Attended On Board in the vessel"). Do not summarize or change it.'),
       category: z.string().describe("The general category of the event (e.g., 'Arrival', 'Cargo Operations', 'Departure', 'Delays', 'Stoppages', 'Bunkering', 'Anchorage', or 'Other')."),
-      startTime: z.string().describe('The start time of the event in YYYY-MM-DD HH:MM format.'),
-      endTime: z.string().describe('The end time of the event in YYYY-MM-DD HH:MM format.'),
-      duration: z.string().describe('The calculated duration of the event (e.g., "2h 30m").'),
-      status: z.string().describe("The status of the event (e.g., 'Completed', 'In Progress', 'Delayed')."),
+      startTime: z.string().optional().describe('The start time of the event in YYYY-MM-DD HH:MM format.'),
+      endTime: z.string().optional().describe('The end time of the event in YYYY-MM-DD HH:MM format.'),
+      duration: z.string().optional().describe('The calculated duration of the event (e.g., "2h 30m").'),
+      status: z.string().optional().describe("The status of the event (e.g., 'Completed', 'In Progress', 'Delayed')."),
       remark: z.string().optional().describe('Any additional notes, comments or details about the event from the SoF.')
     })
   ).describe('An array of port operation events with their start and end times, sorted chronologically.'),
@@ -96,13 +96,13 @@ Here are your tasks:
 1.  **Extract All Details (Comprehensive Extraction)**:
     -   Go through the document line-by-line. Identify **every single event**, no matter how minor. If it has a date or time, it is an event.
     -   For **each event**, you must extract:
-        -   **event**: Use the **exact, verbatim text** from the "Remarks" column of the SoF. Do NOT summarize or rephrase.
-        -   **category**: Classify each event into one of these specific categories: 'Arrival', 'Cargo Operations', 'Departure', 'Delays', 'Stoppages', 'Bunkering', 'Anchorage', or 'Other'.
-        -   **startTime**: The start time of the event in \`YYYY-MM-DD HH:MM\` format.
-        -   **endTime**: The end time of the event in \`YYYY-MM-DD HH:MM\` format.
-        -   **duration**: The calculated duration between start and end times (e.g., "2h 30m"). If start and end are the same, duration is "0m".
-        -   **status**: The status of the event (e.g., 'Completed', 'In Progress', 'Delayed'). Most events will be 'Completed'.
-        -   **remark**: Capture any additional text or notes from the "Remarks" column for that specific event.
+        -   'event': Use the **exact, verbatim text** from the "Remarks" column of the SoF. Do NOT summarize or rephrase.
+        -   'category': Classify each event into one of these specific categories: 'Arrival', 'Cargo Operations', 'Departure', 'Delays', 'Stoppages', 'Bunkering', 'Anchorage', or 'Other'.
+        -   'startTime': The start time of the event in \`YYYY-MM-DD HH:MM\` format.
+        -   'endTime': The end time of the event in \`YYYY-MM-DD HH:MM\` format.
+        -   'duration': The calculated duration between start and end times (e.g., "2h 30m"). If start and end are the same, duration is "0m".
+        -   'status': The status of the event (e.g., 'Completed', 'In Progress', 'Delayed'). Most events will be 'Completed'.
+        -   'remark': Capture any additional text or notes from the "Remarks" column for that specific event.
     -   Also extract the following master details from anywhere in the document: Vessel Name, Port of Call, Voyage Number, etc.
     -   **Crucially, ensure the final list of events is sorted chronologically by 'startTime'**.
 
@@ -128,8 +128,15 @@ const extractPortOperationEventsFlow = ai.defineFlow(
   async input => {
     const {output} = await extractPortOperationEventsPrompt(input);
 
+    if (output && output.events) {
+      // Filter out any events that are missing critical information
+      output.events = output.events.filter(event => event.event && event.startTime && event.endTime);
+    }
+
     // The AI is not responsible for creating timeline blocks, laytime, or summaries.
     // The frontend will handle the creation of timeline blocks.
     return output as ExtractPortOperationEventsOutput;
   }
 );
+
+    
