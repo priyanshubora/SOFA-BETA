@@ -62,6 +62,7 @@ const ExtractPortOperationEventsOutputSchema = z.object({
   cargoQuantity: z.string().optional().describe("The quantity of the cargo (e.g., in metric tons)."),
   voyageNumber: z.string().optional().describe("The voyage number of the vessel."),
   noticeOfReadinessTendered: z.string().optional().describe("The date and time when the Notice of Readiness (NOR) was tendered."),
+  extractionConfidence: z.number().optional().describe("A score from 0 to 100 representing the AI's confidence in the accuracy of the extracted data. Base this on how well the document structure matches a typical Statement of Fact and how many fields had to be inferred or were left blank."),
   events: z.array(
     z.object({
       event: z.string().describe('The exact, verbatim text for the port operation event from the remarks column (e.g., "Pilot Attended On Board in the vessel"). Do not summarize or change it.'),
@@ -128,8 +129,14 @@ Here are your tasks:
         -   Total time spent on cargo operations.
         -   Total time lost to major delays or stoppages, specifying the reasons (e.g., weather, equipment failure).
         ** if any of the details are missing  do not crash just leave it empty or show not mentioned
+
+4.  **Assess Confidence**:
+    -   Provide an \`extractionConfidence\` score from 0 to 100.
+    -   A score of 95-100 means the document was perfectly structured and all data was extracted without issue.
+    -   A score of 85-94 means the document was mostly well-structured, but some minor fields may have been inferred.
+    -   A score below 85 means the document had significant formatting issues, and the extraction may be incomplete or contain inaccuracies. Base the score on how many fields you had to infer or could not find.
         
-4.  **Important**:
+5.  **Important**:
 - focus on start time and end if not given then take previous value or above values end time as start time and if end time is not present take same value as start time from the event after it or below as all the values are in order .     
 + If **startTime** is missing, always use the **previous event's endTime**.  
 + If **endTime** is missing, always use the **next event's startTime**.  
@@ -161,5 +168,3 @@ const extractPortOperationEventsFlow = ai.defineFlow(
     return output as ExtractPortOperationEventsOutput;
   }
 );
-
-    

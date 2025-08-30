@@ -2,7 +2,7 @@
 "use client"
 
 import * as React from "react";
-import type { ExtractPortOperationEventsOutput, TimelineBlock } from "@/ai/flows/extract-port-operation-events";
+import type { ExtractPortOperationEventsOutput } from "@/ai/flows/extract-port-operation-events";
 import {
   Card,
   CardContent,
@@ -18,12 +18,14 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Download, ListTree, Ship, GanttChartSquare, Anchor, Weight, CalendarClock } from "lucide-react";
+import { Download, ListTree, Ship, GanttChartSquare, Anchor, Weight, CalendarClock, ChevronDown, FileJson, FileCsv, CheckCircle } from "lucide-react";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "./ui/accordion";
 import { useMemo } from "react";
 import { Button } from "./ui/button";
 import { cn } from "@/lib/utils";
 import { Badge } from "./ui/badge";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "./ui/dropdown-menu";
+import { Progress } from "./ui/progress";
 
 interface ExtractedEventsViewProps {
   extractedData: ExtractPortOperationEventsOutput;
@@ -54,6 +56,31 @@ export function ExtractedEventsView({ extractedData }: ExtractedEventsViewProps)
     downloadAnchorNode.click();
     downloadAnchorNode.remove();
   };
+
+  const downloadCSV = () => {
+    if (!extractedData || !extractedData.events) return;
+
+    const headers = ["event", "category", "startTime", "endTime", "duration", "status", "remark"];
+    const csvRows = [headers.join(",")];
+
+    for (const event of extractedData.events) {
+      const values = headers.map(header => {
+        const value = event[header as keyof typeof event] || "";
+        const escaped = ('' + value).replace(/"/g, '""');
+        return `"${escaped}"`;
+      });
+      csvRows.push(values.join(","));
+    }
+
+    const csvString = csvRows.join("\n");
+    const dataStr = "data:text/csv;charset=utf-8," + encodeURIComponent(csvString);
+    const downloadAnchorNode = document.createElement('a');
+    downloadAnchorNode.setAttribute("href", dataStr);
+    downloadAnchorNode.setAttribute("download", `${extractedData.vesselName.replace(/\s+/g, '_')}_events.csv`);
+    document.body.appendChild(downloadAnchorNode);
+    downloadAnchorNode.click();
+    downloadAnchorNode.remove();
+  }
   
   type Event = typeof extractedData.events[0];
 
@@ -74,6 +101,13 @@ export function ExtractedEventsView({ extractedData }: ExtractedEventsViewProps)
     }, {} as Record<string, Event[]>);
     
   }, [extractedData]);
+
+  const confidenceColor = useMemo(() => {
+    const score = extractedData?.extractionConfidence ?? 0;
+    if (score >= 95) return "bg-green-500";
+    if (score >= 85) return "bg-yellow-500";
+    return "bg-red-500";
+  }, [extractedData?.extractionConfidence]);
 
 
   if (!extractedData || extractedData.events.length === 0) {
@@ -109,7 +143,30 @@ export function ExtractedEventsView({ extractedData }: ExtractedEventsViewProps)
                 </CardContent>
              </Card>
         </div>
-
+        
+        {extractedData.extractionConfidence && (
+          <div className="space-y-4">
+            <CardHeader className="p-0">
+              <CardTitle className="flex items-center gap-2">
+                  <CheckCircle className="h-6 w-6 text-primary" />
+                  Extraction Confidence
+              </CardTitle>
+            </CardHeader>
+            <Card className="border-none shadow-none">
+              <CardContent className="p-0">
+                <div className="flex items-center gap-4 p-3 rounded-md bg-muted/50">
+                    <div className="w-full">
+                       <div className="flex justify-between items-center mb-1">
+                          <p className="text-sm font-medium text-muted-foreground">AI Confidence Score</p>
+                          <p className="text-lg font-bold text-foreground">{extractedData.extractionConfidence}%</p>
+                       </div>
+                       <Progress value={extractedData.extractionConfidence} indicatorClassName={confidenceColor} />
+                    </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
 
         <div className="space-y-4">
             <CardHeader className="p-0">
@@ -120,10 +177,25 @@ export function ExtractedEventsView({ extractedData }: ExtractedEventsViewProps)
                         The complete list of events and remarks extracted from the Statement of Fact.
                       </CardDescription>
                   </div>
-                  <Button variant="outline" size="sm" onClick={downloadJSON}>
-                      <Download className="mr-2 h-4 w-4" />
-                      Download JSON
-                  </Button>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="outline">
+                        <Download className="mr-2 h-4 w-4" />
+                        Download
+                        <ChevronDown className="ml-2 h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent>
+                      <DropdownMenuItem onClick={downloadJSON}>
+                        <FileJson className="mr-2 h-4 w-4" />
+                        Download as JSON
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={downloadCSV}>
+                        <FileCsv className="mr-2 h-4 w-4" />
+                        Download as CSV
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
               </div>
             </CardHeader>
             <Card className="border-none shadow-none">
