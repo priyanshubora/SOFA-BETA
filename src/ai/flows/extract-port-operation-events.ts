@@ -96,29 +96,31 @@ Here are your tasks:
 1.  **Extract All Details (Comprehensive Extraction)**:
     -   Go through the document line-by-line. Identify **every single event**, no matter how minor. If it has a date or time, it is an event. This includes short breaks, meetings, weather changes, etc.
     -   For **each event**, you must extract:
-        -   **event**: Use the **exact, verbatim text** from the "Remarks" column of the SoF. Do NOT summarize or rephrase. For example, if the SoF says "Pilot Attended On Board in the vessel", you must use that exact phrase.
+        -   **event**: Use the **exact, verbatim text** from the "Remarks" column of the SoF. Do NOT summarize or rephrase.
         -   **category**: Classify each event into one of these specific categories: 'Arrival', 'Cargo Operations', 'Departure', 'Delays', 'Stoppages', 'Bunkering', 'Anchorage', or 'Other'.
         -   **startTime**: The start time of the event in \`YYYY-MM-DD HH:MM\` format. Pay close attention to the date column.
-        -   **endTime**: The end time of the event in \`YYYY-MM-DD HH:MM\` format. Often, the end time of one event is the start time of the next. If an event is a single point in time, the start and end times will be the same.
-        -   **duration**: The calculated duration between start and end times (e.g., "2h 30m", "15m"). If start and end are the same, duration is "0m".
+        -   **endTime**: The end time of the event in \`YYYY-MM-DD HH:MM\` format.
+        -   **duration**: The calculated duration between start and end times (e.g., "2h 30m"). If start and end are the same, duration is "0m".
         -   **status**: The status of the event (e.g., 'Completed', 'In Progress', 'Delayed'). Most events will be 'Completed'.
         -   **remark**: Capture any additional text or notes from the "Remarks" column for that specific event.
-    -   Also extract the following master details from anywhere in the document:
-        -   Vessel/Ship Name
-        -   Port of Call & Berth/Anchorage
-        -   Voyage Number
-        -   Cargo Description and Quantity
-        -   Date/Time Notice of Readiness (NOR) was tendered
-    -   **Crucially, ensure the final list of events is sorted chronologically by \`startTime\`**.
+    -   Also extract the following master details from anywhere in the document: Vessel Name, Port of Call, Voyage Number, etc.
+    -   **Crucially, ensure the final list of events is sorted chronologically by 'startTime'**.
 
-2.  **Calculate Laytime (Detailed Breakdown)**:
+2.  **CRITICAL RULE FOR END TIMES**:
+    -   Events in the SoF are always listed in chronological order.
+    -   If an event has a 'startTime' but no explicit 'endTime' is mentioned for it, you **MUST** infer the 'endTime'.
+    -   The 'endTime' for an event is the 'startTime' of the very next event in the sequence.
+    -   If an event is the very last one, or if it represents a single point in time (like 'NOR Tendered'), its 'endTime' should be the same as its 'startTime'.
+    -   You must apply this logic to ensure every single event has a valid 'endTime', which is necessary to calculate the 'duration'.
+
+3.  **Calculate Laytime (Detailed Breakdown)**:
     -   Perform a detailed laytime calculation. Assume a standard allowed laytime of "3 days" unless specified otherwise.
     -   Analyze each event you extracted. For the \`laytimeEvents\` array, list every event and determine if its duration should be counted towards laytime.
     -   Provide a clear \`reason\` for why each event is counted or not counted (e.g., "Cargo operations count towards laytime," "Rain delay - time does not count," "Holiday - time does not count").
     -   Calculate \`totalLaytime\`, \`timeSaved\` (despatch), and \`demurrage\`.
     -   If demurrage occurs, calculate the \`demurrageCost\` assuming a standard rate of $20,000 per day, prorated for the exact demurrage duration. Format the result as a currency string (e.g., '$15,500.00').
 
-3.  **Summarize Key Insights**:
+4.  **Summarize Key Insights**:
     -   Provide a brief, bullet-point summary highlighting the most critical insights, such as:
         -   Total time spent in port.
         -   Total time spent on cargo operations.
