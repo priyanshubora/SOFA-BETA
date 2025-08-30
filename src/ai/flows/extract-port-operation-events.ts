@@ -65,11 +65,11 @@ const ExtractPortOperationEventsOutputSchema = z.object({
   events: z.array(
     z.object({
       event: z.string().describe('The exact, verbatim text for the port operation event from the remarks column (e.g., "Pilot Attended On Board in the vessel"). Do not summarize or change it.'),
-      category: z.string().optional().describe("The general category of the event (e.g., 'Arrival', 'Cargo Operations', 'Departure', 'Delays', 'Stoppages', 'Bunkering', 'Anchorage', or 'Other')."),
-      startTime: z.string().optional().describe('The start time of the event in YYYY-MM-DD HH:MM format  .'),
-      endTime: z.string().optional().describe('The end time of the event in YYYY-MM-DD HH:MM format .'),
-      duration: z.string().optional().describe("Duration of the event. If not calculable, leave empty or 'Not Mentioned."),
-      status: z.string().optional().describe("The status of the event (e.g., 'Completed', 'In Progress', 'Delayed')."),
+      category: z.string().describe("The general category of the event (e.g., 'Arrival', 'Cargo Operations', 'Departure', 'Delays', 'Stoppages', 'Bunkering', 'Anchorage', or 'Other')."),
+      startTime: z.string().describe('The start time of the event in YYYY-MM-DD HH:MM format  .'),
+      endTime: z.string().describe('The end time of the event in YYYY-MM-DD HH:MM format .'),
+      duration: z.string().describe("Duration of the event. If not calculable, leave empty or 'Not Mentioned."),
+      status: z.string().describe("The status of the event (e.g., 'Completed', 'In Progress', 'Delayed')."),
       remark: z.string().optional().describe('Any additional notes, comments or details about the event from the SoF.')
     })
   ).describe('An array of port operation events with their start and end times, sorted chronologically.'),
@@ -161,3 +161,5 @@ const extractPortOperationEventsFlow = ai.defineFlow(
     return output as ExtractPortOperationEventsOutput;
   }
 );
+
+    
