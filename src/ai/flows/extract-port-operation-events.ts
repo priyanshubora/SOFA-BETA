@@ -69,7 +69,7 @@ const ExtractPortOperationEventsOutputSchema = z.object({
       startTime: z.string().optional().describe('The start time of the event in YYYY-MM-DD HH:MM format  .'),
       endTime: z.string().optional().describe('The end time of the event in YYYY-MM-DD HH:MM format .'),
       duration: z.string().optional().describe("Duration of the event. If not calculable, leave empty or 'Not Mentioned."),
-      status: z.string().describe("The status of the event (e.g., 'Completed', 'In Progress', 'Delayed')."),
+      status: z.string().optional().describe("The status of the event (e.g., 'Completed', 'In Progress', 'Delayed')."),
       remark: z.string().optional().describe('Any additional notes, comments or details about the event from the SoF.')
     })
   ).describe('An array of port operation events with their start and end times, sorted chronologically.'),
@@ -153,8 +153,11 @@ const extractPortOperationEventsFlow = ai.defineFlow(
   },
   async input => {
     const {output} = await extractPortOperationEventsPrompt(input);
-    // The AI is not responsible for creating timeline blocks, so we can return the output as is.
-    // The frontend will handle the creation of timeline blocks.
+    
+    if (output && output.events) {
+        output.events = output.events.filter(event => event.event && event.startTime);
+    }
+    
     return output as ExtractPortOperationEventsOutput;
   }
 );

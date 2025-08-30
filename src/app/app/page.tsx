@@ -107,6 +107,7 @@ export default function AppPage() {
 
         const name = block.subEvents.length > 1 ? `${block.subEvents.length} Overlapping Events` : block.subEvents[0].event;
         const mainCategory = block.subEvents.reduce((longest, current) => {
+            if (!longest.startTime || !longest.endTime || !current.startTime || !current.endTime) return longest;
             const longestDuration = differenceInHours(parseISO(longest.endTime!), parseISO(longest.startTime!));
             const currentDuration = differenceInHours(parseISO(current.endTime!), parseISO(current.startTime!));
             return currentDuration > longestDuration ? current : longest;
