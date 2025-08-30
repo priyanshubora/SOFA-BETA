@@ -57,7 +57,7 @@ const ExtractPortOperationEventsOutputSchema = z.object({
       startTime: z.string().describe('The start time of the event in YYYY-MM-DD HH:MM format.'),
       endTime: z.string().describe('The end time of the event in YYYY-MM-DD HH:MM format.'),
       duration: z.string().describe('The calculated duration of the event (e.g., "2h 30m").'),
-      status: zstring().describe("The status of the event (e.g., 'Completed', 'In Progress', 'Delayed')."),
+      status: z.string().describe("The status of the event (e.g., 'Completed', 'In Progress', 'Delayed')."),
       remark: z.string().optional().describe('Any additional notes, comments or details about the event from the SoF.')
     })
   ).describe('An array of port operation events with their start and end times, sorted chronologically.'),
