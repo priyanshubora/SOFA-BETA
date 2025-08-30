@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview This file defines a Genkit flow for extracting port operation events from Statements of Fact (SoFs).
@@ -9,7 +10,7 @@
  */
 
 import {ai} from '@/ai/genkit';
-import {z} from 'genkit';
+import {z} from 'zod';
 
 const ExtractPortOperationEventsInputSchema = z.object({
   sofContent: z.string().describe("The text content of the Statement of Fact file."),
@@ -31,6 +32,16 @@ const LaytimeCalculationSchema = z.object({
 });
 export type LaytimeCalculation = z.infer<typeof LaytimeCalculationSchema>;
 
+const SubEventSchema = z.object({
+    event: z.string(),
+    category: z.string(),
+    startTime: z.string(),
+    endTime: z.string(),
+    duration: z.string(),
+    status: z.string(),
+    remark: z.string().optional(),
+});
+
 const TimelineBlockSchema = z.object({
     name: z.string(),
     category: z.string(),
@@ -38,7 +49,7 @@ const TimelineBlockSchema = z.object({
     duration: z.string(),
     startTime: z.string(),
     endTime: z.string(),
-    subEvents: z.array(z.any()), // Keeping this simple for now
+    subEvents: z.array(SubEventSchema),
 }).describe("A block of merged, overlapping events for timeline visualization.");
 export type TimelineBlock = z.infer<typeof TimelineBlockSchema>;
 
@@ -129,3 +140,5 @@ const extractPortOperationEventsFlow = ai.defineFlow(
     return output!;
   }
 );
+
+    
