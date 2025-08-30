@@ -1,4 +1,3 @@
-
 'use server';
 /**
  * @fileOverview This file defines a Genkit flow for extracting port operation events from Statements of Fact (SoFs).
@@ -85,7 +84,7 @@ export async function extractPortOperationEvents(input: ExtractPortOperationEven
 const extractPortOperationEventsPrompt = ai.definePrompt({
   name: 'extractPortOperationEventsPrompt',
   input: {schema: ExtractPortOperationEventsInputSchema},
-  output: {schema: ExtractPortOperationEventsOutputSchema},
+  output: {schema: ExtractPortOperationEventsOutputSchema.omit({ timelineBlocks: true })},
   prompt: `You are an expert maritime logistics AI with exceptional attention to detail. Your task is to analyze the provided Statement of Fact (SoF) and perform three tasks with the highest level of accuracy and completeness.
 
 **Primary Directive: Do not miss ANY event. Every single line item in the SoF that has a timestamp must be treated as a unique, extractable event.**
@@ -137,8 +136,8 @@ const extractPortOperationEventsFlow = ai.defineFlow(
   },
   async input => {
     const {output} = await extractPortOperationEventsPrompt(input);
-    return output!;
+    // The AI is not responsible for creating timeline blocks, so we can return the output as is.
+    // The frontend will handle the creation of timeline blocks.
+    return output as ExtractPortOperationEventsOutput;
   }
 );
-
-    

@@ -41,11 +41,10 @@ export default function AppPage() {
     if (!extractedData?.events || extractedData.events.length === 0) {
       return extractedData;
     }
-     // Sort events by start time, which is crucial for merging
+
     const sortedEvents = [...extractedData.events].sort((a, b) => parseISO(a.startTime).getTime() - parseISO(b.startTime).getTime());
     const firstEventTime = parseISO(sortedEvents[0].startTime);
 
-    // Merge overlapping or adjacent events into blocks
     const mergedBlocks: TimelineBlock[] = [];
     if (sortedEvents.length > 0) {
       let currentBlock: TimelineBlock | null = null;
@@ -54,38 +53,35 @@ export default function AppPage() {
         const eventStart = parseISO(event.startTime);
         const eventEnd = parseISO(event.endTime);
 
-        if (currentBlock === null) {
-          // Start the first block
+        if (!currentBlock) {
           currentBlock = {
-            name: 'Block', // Placeholder name
-            category: 'Timeline',
-            subEvents: [event],
+            name: event.event,
+            category: event.category,
             startTime: format(eventStart, 'MMM d, HH:mm'),
             endTime: format(eventEnd, 'HH:mm'),
             time: [differenceInHours(eventStart, firstEventTime), differenceInHours(eventEnd, firstEventTime)],
             duration: event.duration,
+            subEvents: [event],
           };
         } else {
           const blockEndDate = max(currentBlock.subEvents.map(e => parseISO(e.endTime)));
           
-          // Check for overlap: event starts before the current block ends
-          if (eventStart.getTime() < blockEndDate.getTime()) {
+          if (eventStart < blockEndDate) {
             currentBlock.subEvents.push(event);
-            const blockStartDate = parseISO(currentBlock.subEvents[0].startTime);
-            
             const newEndDate = max([blockEndDate, eventEnd]);
             currentBlock.endTime = format(newEndDate, 'HH:mm');
+            const blockStartDate = min(currentBlock.subEvents.map(e => parseISO(e.startTime)));
             currentBlock.time = [differenceInHours(blockStartDate, firstEventTime), differenceInHours(newEndDate, firstEventTime)];
           } else {
             mergedBlocks.push(currentBlock);
             currentBlock = {
-              name: 'Block',
-              category: 'Timeline',
-              subEvents: [event],
+              name: event.event,
+              category: event.category,
               startTime: format(eventStart, 'MMM d, HH:mm'),
               endTime: format(eventEnd, 'HH:mm'),
               time: [differenceInHours(eventStart, firstEventTime), differenceInHours(eventEnd, firstEventTime)],
               duration: event.duration,
+              subEvents: [event],
             };
           }
         }
@@ -95,31 +91,30 @@ export default function AppPage() {
       }
     }
     
-    // Post-process blocks to determine name, color, and final duration
     const finalBlocks = mergedBlocks.map(block => {
-        const longestEvent = block.subEvents.reduce((longest, current) => {
-            const longestDuration = differenceInHours(parseISO(longest.endTime), parseISO(longest.startTime));
-            const currentDuration = differenceInHours(parseISO(current.endTime), parseISO(current.startTime));
-            return currentDuration > longestDuration ? current : longest;
-        });
-
-        const start = parseISO(block.subEvents[0].startTime);
+        const start = min(block.subEvents.map(e => parseISO(e.startTime)));
         const end = max(block.subEvents.map(e => parseISO(e.endTime)));
         const totalDurationHours = differenceInHours(end, start);
         const days = Math.floor(totalDurationHours / 24);
         const hours = Math.floor(totalDurationHours % 24);
-        const minutes = Math.round((totalDurationHours - (days * 24) - hours) * 60);
+        const minutes = Math.round(((totalDurationHours * 3600) - (days * 86400) - (hours * 3600)) / 60);
+
+        const name = block.subEvents.length > 1 ? `${block.subEvents.length} Overlapping Events` : block.subEvents[0].event;
+        const mainCategory = block.subEvents.reduce((longest, current) => {
+            const longestDuration = differenceInHours(parseISO(longest.endTime), parseISO(longest.startTime));
+            const currentDuration = differenceInHours(parseISO(current.endTime), parseISO(current.startTime));
+            return currentDuration > longestDuration ? current : longest;
+        }).category;
 
         return {
           ...block,
-          name: block.subEvents.length > 1 ? `${block.subEvents.length} Overlapping Events` : block.subEvents[0].event,
-          category: longestEvent.category,
+          name,
+          category: mainCategory,
           duration: `${days > 0 ? `${days}d ` : ''}${hours}h ${minutes}m`,
         }
     });
 
     return { ...extractedData, timelineBlocks: finalBlocks };
-
   }, [extractedData]);
 
   const handleDataExtracted = (data: ExtractPortOperationEventsOutput) => {
