@@ -23,7 +23,6 @@ const ExtractPortOperationEventsOutputSchema = z.object({
   cargoQuantity: z.string().optional().describe("The quantity of the cargo (e.g., in metric tons)."),
   voyageNumber: z.string().optional().describe("The voyage number of the vessel."),
   noticeOfReadinessTendered: z.string().optional().describe("The date and time when the Notice of Readiness (NOR) was tendered."),
-  extractionConfidence: z.number().optional().describe("A score from 0 to 100 representing the AI's confidence in the accuracy of the extracted data. Base this on how well the document structure matches a typical Statement of Fact and how many fields had to be inferred or were left blank."),
   events: z.array(
     z.object({
       event: z.string().describe('The exact, verbatim text for the port operation event from the remarks column (e.g., "Pilot Attended On Board in the vessel"). Do not summarize or change it.'),
@@ -37,9 +36,6 @@ const ExtractPortOperationEventsOutputSchema = z.object({
   ).describe('An array of port operation events with their start and end times, sorted chronologically.'),
 });
 export type ExtractPortOperationEventsOutput = z.infer<typeof ExtractPortOperationEventsOutputSchema>;
-export type TimelineBlock = any; // This will be handled by the frontend now.
-export type LaytimeCalculation = any; // This will be handled by the frontend now.
-
 
 export async function extractPortOperationEvents(input: ExtractPortOperationEventsInput): Promise<ExtractPortOperationEventsOutput> {
   return extractPortOperationEventsFlow(input);
@@ -79,11 +75,6 @@ Here are your tasks:
     -   If an event is the **VERY LAST** one in the document and is missing an **endTime**, you **MUST** set its **endTime** to be the same as its **startTime**.
     -   If an event is missing a **startTime**, try to infer it from the previous event's **endTime**. If you cannot, it's okay to omit the event, but this should be rare.
 
-3.  **Assess Confidence**:
-    -   Provide an \`extractionConfidence\` score from 0 to 100.
-    -   A score of 95-100 means the document was perfectly structured.
-    -   A score below 85 means the document had significant formatting issues.
-
 **Process the following SoF content meticulously and return the complete, detailed analysis in the required JSON format.**
 
 SoF Content:
@@ -99,9 +90,9 @@ const extractPortOperationEventsFlow = ai.defineFlow(
   async input => {
     const {output} = await extractPortOperationEventsPrompt(input);
     
+    // Final safeguard: Filter out any events that are fundamentally broken (e.g. missing critical fields)
     if (output && output.events) {
-        // Final safeguard: Filter out any events that are fundamentally broken (e.g. missing critical fields)
-        output.events = output.events.filter(event => event.event && event.startTime && event.endTime && event.status && event.duration);
+        output.events = output.events.filter(event => event.event && event.startTime && event.endTime);
     }
     
     return output as ExtractPortOperationEventsOutput;

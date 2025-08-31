@@ -1,9 +1,7 @@
-
 "use client";
 
 import { useState, useRef, useEffect } from "react";
 import { guideNewUsers } from "@/ai/flows/guide-new-users";
-import type { ExtractPortOperationEventsOutput } from "@/ai/flows/extract-port-operation-events";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -18,7 +16,7 @@ interface Message {
 }
 
 interface FloatingAiAssistantProps {
-  extractedData: ExtractPortOperationEventsOutput | null;
+  extractedData: any | null; // Allow any for enrichedData
 }
 
 export function FloatingAiAssistant({ extractedData }: FloatingAiAssistantProps) {
