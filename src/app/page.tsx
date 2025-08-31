@@ -14,7 +14,7 @@ export default function LandingPage() {
       <div className="relative min-h-screen w-full text-white">
         <div className="absolute inset-0 z-0">
           <video
-            src="https://videos.pexels.com/video-files/2344546/2344546-uhd_2560_1440_25fps.mp4"
+            src="https://videos.pexels.com/video-files/19304192/19304192-uhd_2560_1440_30fps.mp4"
             autoPlay
             loop
             muted

@@ -75,7 +75,7 @@ export default function AboutPage() {
                              <h3 className="text-xl font-bold">Created By</h3>
                         </div>
                         <p className="text-muted-foreground mt-2">
-                            Rohan Nautiyal, Shubham Rana, Yashvir Singh Negi, and Priyanshu Bora
+                            Rohan Nautiyal, Shubham Rawat, Yashvir Singh Negi, and Priyanshu Bora
                         </p>
                     </div>
 
