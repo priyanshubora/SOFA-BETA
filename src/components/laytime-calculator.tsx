@@ -63,9 +63,9 @@ const parseDurationToHours = (durationStr: string): number => {
   if (!durationStr || typeof durationStr !== 'string') return 0;
   
   let totalHours = 0;
-  const daysMatch = durationStr.match(/(\d+)\s*day/);
-  const hoursMatch = durationStr.match(/(\d+)\s*hour/);
-  const minutesMatch = durationStr.match(/(\d+)\s*minute/);
+  const daysMatch = durationStr.match(/(\d+)\s*d/);
+  const hoursMatch = durationStr.match(/(\d+)\s*h/);
+  const minutesMatch = durationStr.match(/(\d+)\s*m/);
 
   if (daysMatch) totalHours += parseInt(daysMatch[1], 10) * 24;
   if (hoursMatch) totalHours += parseInt(hoursMatch[1], 10);
@@ -84,7 +84,7 @@ const formatHoursToDuration = (totalHours: number): string => {
     let result = '';
     if (days > 0) result += `${days}d `;
     if (remainingHours > 0) result += `${remainingHours}h `;
-    if (minutes > 0) result += `${minutes}m`;
+    if (minutes > 0 || result === '') result += `${minutes}m`;
     
     return result.trim();
 }
@@ -96,12 +96,16 @@ export function LaytimeCalculator({ laytimeResult }: LaytimeCalculatorProps) {
   const [displayCurrency, setDisplayCurrency] = useState<Currency>("USD");
 
   const initialTotalLaytimeHours = useMemo(() => {
-    return parseDurationToHours(laytimeResult?.totalLaytime || "");
+    if (!laytimeResult?.totalLaytime) return 0;
+    return parseDurationToHours(laytimeResult.totalLaytime);
   }, [laytimeResult?.totalLaytime]);
 
   useEffect(() => {
     if (laytimeResult?.allowedLaytime) {
-        setAllowedLaytimeDays(parseDurationToHours(laytimeResult.allowedLaytime) / 24);
+        const allowedHours = parseDurationToHours(laytimeResult.allowedLaytime);
+        if (allowedHours > 0) {
+            setAllowedLaytimeDays(allowedHours / 24);
+        }
     }
   }, [laytimeResult?.allowedLaytime]);
 
@@ -143,7 +147,7 @@ export function LaytimeCalculator({ laytimeResult }: LaytimeCalculatorProps) {
     );
   }
 
-  const hasDemurrage = calculation.demurrage && calculation.demurrage !== "0h 0m";
+  const hasDemurrage = calculation.demurrageCost > 0;
 
   return (
     <TooltipProvider>
@@ -344,3 +348,5 @@ export function LaytimeCalculator({ laytimeResult }: LaytimeCalculatorProps) {
 }
 
 export default LaytimeCalculator;
+
+    
