@@ -5,13 +5,43 @@ import { useState, useMemo } from 'react';
 import dynamic from 'next/dynamic';
 import { SoFProcessor } from '@/components/sof-processor';
 import { Anchor, ArrowLeft, Home as HomeIcon } from 'lucide-react';
-import type { ExtractPortOperationEventsOutput, TimelineBlock } from '@/ai/flows/extract-port-operation-events';
+import type { ExtractPortOperationEventsOutput } from '@/ai/flows/extract-port-operation-events';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { Skeleton } from '@/components/ui/skeleton';
-import { parseISO, differenceInHours, format, max, min } from 'date-fns';
+import { parseISO, differenceInHours, format, max, min, differenceInMinutes } from 'date-fns';
+
+// Define the types directly in the frontend now
+interface TimelineBlock {
+  name: string;
+  category?: string;
+  time: [number, number];
+  duration?: string;
+  startTime?: string;
+  endTime?: string;
+  subEvents: any[];
+}
+
+interface LaytimeEvent {
+  event: string;
+  startTime?: string;
+  endTime?: string;
+  duration?: string;
+  isCounted: boolean;
+  reason?: string;
+}
+
+interface LaytimeCalculation {
+  totalLaytime: string;
+  allowedLaytime: string;
+  timeSaved: string;
+  demurrage: string;
+  demurrageCost?: string;
+  laytimeEvents: LaytimeEvent[];
+}
+
 
 const ClientOceanBackground = dynamic(() => import('@/components/client-ocean-background').then(mod => mod.ClientOceanBackground), {
   ssr: false,
@@ -34,20 +64,35 @@ const AnalyticsDashboard = dynamic(() => import('@/components/analytics-dashboar
     loading: () => <Skeleton className="h-[500px] w-full" />,
 });
 
+// Helper to format minutes into a "d h m" string
+const formatMinutesToDuration = (totalMinutes: number): string => {
+    if (totalMinutes <= 0) return "0m";
+    const days = Math.floor(totalMinutes / 1440);
+    const remainingMinutes = totalMinutes % 1440;
+    const hours = Math.floor(remainingMinutes / 60);
+    const minutes = Math.round(remainingMinutes % 60);
+
+    let result = '';
+    if (days > 0) result += `${days}d `;
+    if (hours > 0) result += `${hours}h `;
+    if (minutes > 0 || result === '') result += `${minutes}m`; // show 0m if total is 0
+    
+    return result.trim();
+}
+
+
 export default function AppPage() {
   const [extractedData, setExtractedData] = useState<ExtractPortOperationEventsOutput | null>(null);
 
   const enrichedData = useMemo(() => {
     if (!extractedData?.events || extractedData.events.length === 0) {
-      return extractedData;
+      return null;
     }
     
     const validEvents = extractedData.events.filter(e => e.startTime && e.endTime);
+    if (validEvents.length === 0) return null;
 
-    if (validEvents.length === 0) {
-      return { ...extractedData, timelineBlocks: [] };
-    }
-
+    // 1. Generate Timeline Blocks
     const sortedEvents = [...validEvents].sort((a, b) => parseISO(a.startTime!).getTime() - parseISO(b.startTime!).getTime());
     const firstEventTime = parseISO(sortedEvents[0].startTime!);
 
@@ -97,19 +142,16 @@ export default function AppPage() {
       }
     }
     
-    const finalBlocks = mergedBlocks.map(block => {
+    const timelineBlocks = mergedBlocks.map(block => {
         const start = min(block.subEvents.map(e => parseISO(e.startTime!)));
         const end = max(block.subEvents.map(e => parseISO(e.endTime!)));
-        const totalDurationHours = differenceInHours(end, start);
-        const days = Math.floor(totalDurationHours / 24);
-        const hours = Math.floor(totalDurationHours % 24);
-        const minutes = Math.round(((totalDurationHours * 3600) - (days * 86400) - (hours * 3600)) / 60);
-
+        const totalDurationMinutes = differenceInMinutes(end, start);
+        
         const name = block.subEvents.length > 1 ? `${block.subEvents.length} Overlapping Events` : block.subEvents[0].event;
         const mainCategory = block.subEvents.reduce((longest, current) => {
             if (!longest.startTime || !longest.endTime || !current.startTime || !current.endTime) return longest;
-            const longestDuration = differenceInHours(parseISO(longest.endTime!), parseISO(longest.startTime!));
-            const currentDuration = differenceInHours(parseISO(current.endTime!), parseISO(current.startTime!));
+            const longestDuration = differenceInMinutes(parseISO(longest.endTime!), parseISO(longest.startTime!));
+            const currentDuration = differenceInMinutes(parseISO(current.endTime!), parseISO(current.startTime!));
             return currentDuration > longestDuration ? current : longest;
         }).category;
 
@@ -117,11 +159,59 @@ export default function AppPage() {
           ...block,
           name,
           category: mainCategory,
-          duration: `${days > 0 ? `${days}d ` : ''}${hours}h ${minutes}m`,
+          duration: formatMinutesToDuration(totalDurationMinutes),
         }
     });
 
-    return { ...extractedData, timelineBlocks: finalBlocks };
+    // 2. Generate Laytime Calculation
+    let totalLaytimeMinutes = 0;
+    const laytimeEvents: LaytimeEvent[] = validEvents.map(event => {
+      let isCounted = false;
+      let reason = "Not counted towards laytime.";
+      
+      if (event.category === 'Cargo Operations') {
+        isCounted = true;
+        reason = "Cargo operations count towards laytime.";
+      } else if (event.category === 'Delays' || event.category === 'Stoppages') {
+        isCounted = false;
+        reason = "Delays and stoppages generally do not count.";
+      }
+      
+      const durationMinutes = differenceInMinutes(parseISO(event.endTime!), parseISO(event.startTime!));
+      if (isCounted) {
+        totalLaytimeMinutes += durationMinutes;
+      }
+      
+      return {
+        event: event.event,
+        startTime: event.startTime,
+        endTime: event.endTime,
+        duration: formatMinutesToDuration(durationMinutes),
+        isCounted,
+        reason,
+      };
+    });
+
+    const allowedLaytime = "3 days"; // Default
+    const allowedLaytimeMinutes = 3 * 24 * 60;
+    const difference = allowedLaytimeMinutes - totalLaytimeMinutes;
+
+    const laytimeCalculation: LaytimeCalculation = {
+      totalLaytime: formatMinutesToDuration(totalLaytimeMinutes),
+      allowedLaytime,
+      timeSaved: difference > 0 ? formatMinutesToDuration(difference) : "0m",
+      demurrage: difference < 0 ? formatMinutesToDuration(Math.abs(difference)) : "0m",
+      laytimeEvents,
+    };
+    
+    // 3. Generate Summary
+    const totalTimeInPortMinutes = differenceInMinutes(parseISO(sortedEvents[sortedEvents.length - 1].endTime!), parseISO(sortedEvents[0].startTime!));
+    const cargoOpsMinutes = laytimeEvents.filter(e => e.isCounted).reduce((acc, e) => acc + differenceInMinutes(parseISO(e.endTime!), parseISO(e.startTime!)), 0);
+    const delayMinutes = validEvents.filter(e => e.category === 'Delays' || e.category === 'Stoppages').reduce((acc, e) => acc + differenceInMinutes(parseISO(e.endTime!), parseISO(e.startTime!)), 0);
+
+    const eventsSummary = `*   **Total time in port:** ${formatMinutesToDuration(totalTimeInPortMinutes)}\n*   **Total time on cargo operations:** ${formatMinutesToDuration(cargoOpsMinutes)}\n*   **Total time lost to delays/stoppages:** ${formatMinutesToDuration(delayMinutes)}`;
+
+    return { ...extractedData, timelineBlocks, laytimeCalculation, eventsSummary };
   }, [extractedData]);
 
   const handleDataExtracted = (data: ExtractPortOperationEventsOutput) => {
